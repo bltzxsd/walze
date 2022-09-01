@@ -2,8 +2,8 @@ import json
 import logging
 import random
 import re
-import aiofiles
 
+import aiofiles
 import pyfiglet
 from interactions import Embed, EmbedImageStruct, Member
 
@@ -87,6 +87,7 @@ def decipher_dice(roll: str) -> tuple[int, int, int]:
     rolls, sides = values[0], values[1]
 
     return rolls, sides, mod
+
 
 async def open_stats(author: Member):
     repr = {

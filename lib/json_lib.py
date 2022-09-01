@@ -19,7 +19,7 @@ async def modify_param(
         weapon = author["weapon"]
         custom = author["custom"]
     except:
-        author["stats"]  = {}
+        author["stats"] = {}
         author["weapon"] = {}
         author["custom"] = {}
 

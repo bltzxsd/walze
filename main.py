@@ -1,13 +1,13 @@
-from py_expression_eval import Parser
 import json
-import operator
 import logging
+import operator
 import os
 import string
 import sys
 
 import interactions
 from dotenv import load_dotenv
+from py_expression_eval import Parser
 
 import lib.json_lib as json_lib
 import lib.misc as misc
@@ -76,29 +76,34 @@ async def kill(ctx: interactions.CommandContext):
 
 
 @bot.command(
-    name="sort", 
+    name="sort",
     description="sorts entities by their values",
     options=[
         interactions.Option(
             name="names",
             description="Names of the entities",
             type=interactions.OptionType.STRING,
-            required=True
+            required=True,
         ),
-            interactions.Option(
+        interactions.Option(
             name="initiatives",
             description="initiative rolls for the entities",
             type=interactions.OptionType.STRING,
             required=True,
-        )]
-    )
+        ),
+    ],
+)
 async def sort(ctx: interactions.CommandContext, names: str, initiatives: str):
     names = names.split()
     initiatives = [int(n) for n in initiatives.split()]
     zipped = list(zip(names, initiatives))
     sorted_list = sorted(zipped, key=operator.itemgetter(1), reverse=True)
-    pretty_print = "\n".join(f'{name}:\t{value}'.expandtabs(8) for name, value in sorted_list)
-    await ctx.send(embeds=quick_embed("Ordered List", f"```\n{pretty_print}\n```", "ok"))
+    pretty_print = "\n".join(
+        f"{name}:\t{value}".expandtabs(8) for name, value in sorted_list
+    )
+    await ctx.send(
+        embeds=quick_embed("Ordered List", f"```\n{pretty_print}\n```", "ok")
+    )
 
 
 @bot.command(
@@ -111,7 +116,7 @@ async def sort(ctx: interactions.CommandContext, names: str, initiatives: str):
             type=interactions.OptionType.STRING,
             required=True,
         )
-    ]
+    ],
 )
 async def calc(ctx: interactions.CommandContext, expr: str):
     parser = Parser()
@@ -123,8 +128,9 @@ async def calc(ctx: interactions.CommandContext, expr: str):
     else:
         title, desc, status = "Evaluation", f"{expr}:\n**{expression}**", "success"
         ephemeral = False
-    
+
     await ctx.send(embeds=quick_embed(title, desc, status), ephemeral=ephemeral)
+
 
 @bot.command(
     name="roll",
@@ -281,7 +287,9 @@ async def skill(ctx: interactions.CommandContext, skill: str):
         skill = content[str(ctx.author.id)]["stats"][string.capwords(skill)]
     except:
         return await ctx.send(
-            embeds=quick_embed("Error", f"No such skill available! ({string.capwords(skill)})", "error"),
+            embeds=quick_embed(
+                "Error", f"No such skill available! ({string.capwords(skill)})", "error"
+            ),
             ephemeral=True,
         )
 
