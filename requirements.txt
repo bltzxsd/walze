@@ -3,8 +3,11 @@
 # walze\main.py: 8
 discord_py_interactions == 4.3.1
 
-# walze\main.py: 10
+# walze\main.py: 11
 py_expression_eval == 0.3.14
 
 # walze\main.py: 9
+pyfiglet == 0.8.post1
+
+# walze\main.py: 10
 python_dotenv == 0.20.0

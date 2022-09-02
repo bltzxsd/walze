@@ -1,5 +1,5 @@
 import json
-import logging
+import pathlib
 import random
 import re
 
@@ -89,6 +89,25 @@ def decipher_dice(roll: str) -> tuple[int, int, int]:
     return rolls, sides, mod
 
 
+class CharacterSheets:
+    def __init__(self, filename: str):
+        self.__file = open(filename, "r")
+
+    def __del__(self):
+        self.__file.close()
+
+    async def ready(self):
+        self.__file = self.__file
+
+    def read(self) -> str:
+        curr = self.__file.read()
+        self.__file.seek(0)
+        return curr
+
+
+sheets = CharacterSheets("stats.json")
+
+
 async def open_stats(author: Member):
     repr = {
         str(author.id): {
@@ -99,19 +118,17 @@ async def open_stats(author: Member):
             "initiative": "",
         }
     }
-    async with aiofiles.open("stats.json", "r") as save:
-        try:
-            content = await save.read()
-            content: dict = json.loads(content)
-            if content.get(str(author.id)) is None:
-                async with aiofiles.open("stats.json", "w") as save:
-                    content.update(repr)
-                    await save.write(json.dumps(content, indent=4))
-        except:
-            content = json.loads("{}")
-            async with aiofiles.open("stats.json", "w") as save:
-                content.update(repr)
-                await save.write(json.dumps(content, indent=4))
+
+    try:
+        content = sheets.read()
+        content: dict = json.loads(content)
+    except:
+        content: dict = json.loads("{}")
+
+    if content.get(str(author.id)) is None or content == {}:
+        async with aiofiles.open("stats.json", "w") as save:
+            content.update(repr)
+            await save.write(json.dumps(content, indent=4))
 
     return content
 
