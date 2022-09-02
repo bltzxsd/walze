@@ -6,6 +6,7 @@ import string
 import sys
 
 import interactions
+import pyfiglet
 from dotenv import load_dotenv
 from py_expression_eval import Parser
 
@@ -21,7 +22,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
-    # filename="bot.log",
+    filename="bot.log",
 )
 
 bot = interactions.Client(token=os.getenv("DISCORD_TOKEN"))
@@ -126,10 +127,15 @@ async def calc(ctx: interactions.CommandContext, expr: str):
         title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
         ephemeral = True
     else:
-        title, desc, status = "Evaluation", f"{expr}:\n**{expression}**", "success"
+        figlet = pyfiglet.figlet_format(str(expression), "fraktur")
+        figlet = figlet.replace("`", "​`")
+        desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
+        title, status = f"Evaluation: {expr}", "ok"
         ephemeral = False
 
-    await ctx.send(embeds=quick_embed(title, desc, status), ephemeral=ephemeral)
+    embed = quick_embed(title, desc, status)
+    embed.set_footer(f"{expression}")
+    await ctx.send(embeds=embed, ephemeral=ephemeral)
 
 
 @bot.command(
