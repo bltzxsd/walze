@@ -612,7 +612,7 @@ async def char_autocomplete(ctx: interactions.CommandContext, value: str = ""):
         )
 
     autocomplete = [
-        interactions.Choice(name=param.capitalize(), value=param)
+        interactions.Choice(name=param, value=param)
         for param in parameters.keys()
         if string.capwords(value) in param
     ]
