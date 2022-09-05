@@ -147,11 +147,17 @@ def roll_embed(
         roll_syn += "+"
     if mod != 0:
         roll_syn += str(mod)
-    base_url = "https://cdn.discordapp.com/avatars"
-    user_avatar = f"{base_url}/{author.id}/{author.avatar}.webp"
+
+    try:
+        base_url = "https://cdn.discordapp.com/avatars"
+        user_avatar = f"{base_url}/{author.id}/{author.avatar}.webp"
+        title = author.name + "'s Roll"
+    except:
+        user_avatar = ""
+        title = "Your Roll"
 
     embed = Embed(
-        title=f"{author.name}'s Roll",
+        title=title,
         thumbnail=EmbedImageStruct(url=user_avatar, height=100, width=100),
         color=0xE2E0DD,
     )
