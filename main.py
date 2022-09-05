@@ -57,7 +57,7 @@ async def on_command(ctx: interactions.CommandContext):
 
 @bot.command(
     name="ping",
-    description="Get latency",
+    description="Get latency.",
 )
 async def ping(ctx: interactions.CommandContext):
     await ctx.send(
@@ -67,7 +67,7 @@ async def ping(ctx: interactions.CommandContext):
     )
 
 
-@bot.command(name="kill", description="Kill bot", scope=hq)
+@bot.command(name="kill", description="Kill bot.", scope=hq)
 async def kill(ctx: interactions.CommandContext):
     if ctx.author.id == int(os.getenv("OWNER")):
         await ctx.send("Killing bot.", ephemeral=True)
@@ -78,17 +78,17 @@ async def kill(ctx: interactions.CommandContext):
 
 @bot.command(
     name="sort",
-    description="sorts entities by their values",
+    description="Sorts entities by their values.",
     options=[
         interactions.Option(
             name="names",
-            description="Names of the entities",
+            description="Names of the entities. Eg: `Entity1 Entity2 Entitiy3`.",
             type=interactions.OptionType.STRING,
             required=True,
         ),
         interactions.Option(
             name="initiatives",
-            description="initiative rolls for the entities",
+            description="Values for the entities. Eg: `21 15 19`",
             type=interactions.OptionType.STRING,
             required=True,
         ),
@@ -108,18 +108,18 @@ async def sort(ctx: interactions.CommandContext, names: str, initiatives: str):
 
 
 @bot.command(
-    name="calc",
-    description="Calculate rolls quickly",
+    name="eval",
+    description="Evaluate mathematical expressions quickly.",
     options=[
         interactions.Option(
             name="expr",
-            description="expression to be calculated",
+            description="Expression to be calculated. Eg: `1 + 1 * 1 - 1 ^ 1 / 1`",
             type=interactions.OptionType.STRING,
             required=True,
         )
     ],
 )
-async def calc(ctx: interactions.CommandContext, expr: str):
+async def eval(ctx: interactions.CommandContext, expr: str):
     parser = Parser()
     try:
         expression = parser.parse(expr).evaluate({})
@@ -140,29 +140,29 @@ async def calc(ctx: interactions.CommandContext, expr: str):
 
 @bot.command(
     name="roll",
-    description="Roll a dice",
+    description="Roll a dice.",
     options=[
         interactions.Option(
             name="rolls",
-            description="Number of times to roll the dice",
+            description="Number of times to roll the dice. Eg: `1`, `2`, `3`",
             type=interactions.OptionType.INTEGER,
             required=True,
         ),
         interactions.Option(
             name="sides",
-            description="Number of sides the dice should have",
+            description="Number of sides the dice should have. Eg: `4`, `6`, `8`, `10`, `20`",
             type=interactions.OptionType.INTEGER,
             required=True,
         ),
         interactions.Option(
             name="mod",
-            description="Add or subtract skill modifiers from the dice roll",
+            description="Add or subtract modifiers from the dice roll. Eg: `1` or `-2`",
             type=interactions.OptionType.INTEGER,
             required=False,
         ),
         interactions.Option(
             name="implication",
-            description="Choose if the roll should have an advantage or disadvantage",
+            description="Choose if the roll should have an advantage or disadvantage.",
             type=interactions.OptionType.STRING,
             choices=[
                 interactions.Choice(name="Advantage", value="adv"),
@@ -172,7 +172,7 @@ async def calc(ctx: interactions.CommandContext, expr: str):
         ),
         interactions.Option(
             name="ephemeral",
-            description="Whether the result should only be visible to the user",
+            description="Whether the result should only be visible to the user.",
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
@@ -202,21 +202,27 @@ async def roll(
 
     await ctx.send(embeds=embed, ephemeral=ephemeral)
 
+@bot.command(
+    name="modify",
+    description="Modify a value",
+)
+async def modify(_ctx: interactions.CommandContext):
+    pass
 
 @bot.command(
     name="weapon",
-    description="Rolls a weapon from your inventory",
+    description="Rolls a weapon from your inventory.",
     options=[
         interactions.Option(
             name="name",
-            description="The name of the weapon to roll",
+            description="The name of the weapon to roll.",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
         ),
         interactions.Option(
             name="implication",
-            description="Roll type for the weapon",
+            description="Roll type for the weapon.",
             type=interactions.OptionType.STRING,
             choices=[
                 interactions.Choice(name="Hit", value="hit"),
@@ -276,11 +282,11 @@ async def weapon_autocomplete(ctx: interactions.CommandContext, value: str = "")
 
 @bot.command(
     name="skill",
-    description="Roll for skill in saved parameter. Eg. Insight, Perception, etc.",
+    description="Roll for skill in saved parameter.",
     options=[
         interactions.Option(
             name="skill",
-            description="Roll for the given skill",
+            description="Roll for the given skill. Eg: `Insight`, `Perception`",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
@@ -347,20 +353,20 @@ async def initiative(ctx: interactions.CommandContext):
     await ctx.send(embeds=embed)
 
 
-@bot.command(
-    name="modify_skill",
-    description="Modifies skill parameters",
+@modify.subcommand(
+    name="skill",
+    description="Modifies skill parameters.",
     options=[
         interactions.Option(
             name="skill",
-            description="Skill to modify. Eg. Acrobatics, Deception, etc.",
+            description="Skill to modify. Eg. `Acrobatics`, `Deception`",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
         ),
         interactions.Option(
             name="value",
-            description="Value to modify. Eg. 1, 2, 4, 8, etc.",
+            description="Value to modify. Eg. `1`, `2`, `4`, `8`.",
             type=interactions.OptionType.INTEGER,
             required=True,
         ),
@@ -374,7 +380,7 @@ async def modify_skill(ctx: interactions.CommandContext, skill: str, value: int)
     await ctx.send(embeds=quick_embed(output, f"```{reply}```", color), ephemeral=True)
 
 
-@bot.autocomplete("modify_skill", "key")
+@bot.autocomplete("modify", "skill")
 async def modify_skill_autocomplete(ctx: interactions.CommandContext, value: str = ""):
     content = await open_stats(ctx.author)
     try:
@@ -390,32 +396,33 @@ async def modify_skill_autocomplete(ctx: interactions.CommandContext, value: str
     await ctx.populate(autocomplete)
 
 
-@bot.command(
-    name="modify_weapon",
-    description="Modify Weapon parameters",
+
+@modify.subcommand(
+    name="weapon",
+    description="Modify weapon parameters.",
     options=[
         interactions.Option(
-            name="name",
-            description="Name of the weapon to modify Eg. Longsword, Shortbow, etc.",
+            name="weapon",
+            description="Name of the weapon to modify Eg. `Longsword`, `Shortbow`",
             type=interactions.OptionType.STRING,
             required=True,
             autocomplete=True,
         ),
         interactions.Option(
             name="hit",
-            description="Value of the weapon (hit) to modify, Eg. 1d20+2, 1d20+6, etc.",
+            description="Value of the weapon (hit) to modify, Eg. `1d20+2`, `1d20-4`.",
             type=interactions.OptionType.STRING,
             required=True,
         ),
         interactions.Option(
             name="dmg",
-            description="Value of the weapon (dmg) to modify, Eg. 1d8+2, 2d6, etc.",
+            description="Value of the weapon (dmg) to modify, Eg. `1d8+2`, `2d6`",
             type=interactions.OptionType.STRING,
             required=True,
         ),
         interactions.Option(
             name="attribute",
-            description="Value of the attribute of the weapon Eg. 2d6, 1d6, etc.",
+            description="Value of the attribute of the weapon Eg. `2d6`, `1d6`",
             type=interactions.OptionType.STRING,
             required=False,
         ),
@@ -443,7 +450,7 @@ async def modify_weapon(
     await ctx.send(embeds=quick_embed(output, f"```{reply}```", color), ephemeral=True)
 
 
-@bot.autocomplete("modify_weapon", "name")
+@bot.autocomplete("modify", "weapon")
 async def modify_weapon_autocomplete(ctx: interactions.CommandContext, value: str = ""):
     content = await open_stats(ctx.author)
     try:
@@ -460,20 +467,20 @@ async def modify_weapon_autocomplete(ctx: interactions.CommandContext, value: st
     await ctx.populate(autocomplete)
 
 
-@bot.command(
-    name="modify_char",
-    description="Modifies character parameters",
+@modify.subcommand(
+    name="char",
+    description="Modifies character parameters.",
     options=[
         interactions.Option(
-            name="key",
-            description="Key to modify. Eg. Name, Initiative, etc.",
+            name="char",
+            description="Key to modify. Eg. `Name`, `Initiative`",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
         ),
         interactions.Option(
             name="value",
-            description="Value to modify. Eg. 1, 2, 1d8+4, etc.",
+            description="Value to modify. Eg. `1`, `2`, `1d8+4`",
             type=interactions.OptionType.STRING,
             required=True,
         ),
@@ -486,7 +493,7 @@ async def modify_char(ctx: interactions.CommandContext, key: str, value: str):
     await ctx.send(embeds=quick_embed(output, f"```{reply}```", color), ephemeral=True)
 
 
-@bot.autocomplete("modify_char", "key")
+@bot.autocomplete("modify", "char")
 async def modify_char_autocomplete(ctx: interactions.CommandContext, value: str = ""):
     content = await open_stats(ctx.author)
     try:
@@ -505,14 +512,20 @@ async def modify_char_autocomplete(ctx: interactions.CommandContext, value: str 
 
     await ctx.populate(autocomplete)
 
-
 @bot.command(
-    name="save_skills",
-    description="Saves initial skills",
+    name="save",
+    description="Saves a key value pair.",
+)
+async def save(_ctx: interactions.CommandContext): 
+    pass
+
+@save.subcommand(
+    name="skills",
+    description="Saves initial skills.",
     options=[
         interactions.Option(
             name="attributes",
-            description="Save all skills at once.",
+            description="Save all skills at once in alphabetical order. Eg: `1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18`",
             type=interactions.OptionType.STRING,
             required=True,
         )
@@ -525,11 +538,11 @@ async def save_skills(ctx: interactions.CommandContext, attributes: str):
 
 @bot.command(
     name="retrieve",
-    description="Shows all saved parameters for your character",
+    description="Shows all saved parameters for your character.",
     options=[
         interactions.Option(
             name="ephemeral",
-            description="Whether the reply should be visible only to the user",
+            description="Whether the reply should be visible only to the user.",
             type=interactions.OptionType.BOOLEAN,
         ),
     ],
@@ -564,7 +577,7 @@ async def retrieve(ctx: interactions.CommandContext, ephemeral: bool = False):
     options=[
         interactions.Option(
             name="name",
-            description="The name of the parameter to roll",
+            description="The name of the parameter to roll.",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
@@ -607,20 +620,20 @@ async def char_autocomplete(ctx: interactions.CommandContext, value: str = ""):
     await ctx.populate(autocomplete)
 
 
-@bot.command(
-    name="modify_custom",
+@modify.subcommand(
+    name="custom",
     description="Modify custom rolls.",
     options=[
         interactions.Option(
             name="key",
-            description="Key to modify. Eg. Wisdom Saves, , etc.",
+            description="Key to modify. Eg: `Wis Save`, `Int Save`",
             type=interactions.OptionType.STRING,
             autocomplete=True,
             required=True,
         ),
         interactions.Option(
             name="value",
-            description="Value to modify. Eg. 1d20+4, 1d4+5, etc.",
+            description="Value to modify. Eg: `1d20+4`, `1d4+5`",
             type=interactions.OptionType.STRING,
             required=True,
         ),
@@ -645,7 +658,7 @@ async def modify_custom(ctx: interactions.CommandContext, key: str, value: str):
     pass
 
 
-@bot.autocomplete("modify_custom", "key")
+@bot.autocomplete("modify", "key")
 async def modify_custom_autocomplete(ctx: interactions.CommandContext, value: str = ""):
     content = await open_stats(ctx.author)
 
