@@ -16,22 +16,30 @@ async def modify_param(
     author = content[str(ctx.author.id)]
     try:
         skills = author["stats"]
-        weapon = author["weapon"]
+        weapon = author["weapons"]
         custom = author["custom"]
+        spells = author["spells"]
+        features = author["features"]
     except:
         author["stats"] = {}
-        author["weapon"] = {}
+        author["weapons"] = {}
         author["custom"] = {}
+        author["spells"] = {}
+        author["features"] = {}
 
     match access:
         case "char":
             level = author
         case "skills":
             level = skills
-        case "weapon":
+        case "weapons":
             level = weapon
         case "custom":
             level = custom
+        case "spells":
+            level = spells
+        case "features":
+            level = features
         case _:
             return "Error", "Access Level not specified", "error"
 
@@ -59,8 +67,8 @@ def create_skills(skills: str):
     skill_values = [int(value) for value in re.findall(r"-?\d+", skills)]
     try:
         assert len(skill_values) == 18
-    except AssertionError as e:
-        raise e
+    except AssertionError:
+        raise Exception(f"{skill_values}")
 
     skills: dict = {name: value for name, value in zip(misc.stats, skill_values)}
     return skills
@@ -69,10 +77,10 @@ def create_skills(skills: str):
 async def write_stats(author: Member, skills: str):
     try:
         skills = create_skills(skills)
-    except:
+    except Exception as e:
         return (
             "Error",
-            f"Invalid number of values provided ({len(skills)}). Needed: 18",
+            f"Invalid number of values provided ({len(skills)}). Needed: 18.\n{e}",
             "error",
         )
     content = await misc.open_stats(author)
