@@ -7,4 +7,4 @@ __pycache__
 Procfile
 *.ico
 /output
-/walze-venv
+/.venv

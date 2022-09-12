@@ -24,7 +24,7 @@ synced: bool = False
 load_dotenv()
 
 logging.basicConfig(
-    level=logging.WARN,
+    level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
     filename="bot.log",
