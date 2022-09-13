@@ -48,22 +48,17 @@ class BaseCommands(interactions.Extension):
                 description="Entities and their values. Eg: `Entity4:18 Entity3:17 Entity2:14 Entity1:9`.",
                 type=interactions.OptionType.STRING,
                 required=True,
-            ),
-            # interactions.Option(
-            #     name="initiatives",
-            #     description="Values for the entities. Eg: `21 15 19`",
-            #     type=interactions.OptionType.STRING,
-            #     required=True,
-            # ),
+            )
         ],
     )
     async def sort(self, ctx: CommandContext, entities: str):
         entities = re.findall(r"[a-zA-Z]*\d*:\d*", entities)
-        # initiatives = [int(n) for n in initiatives.split()]
-        entities = [tuple(entity.split(":")) for entity in entities]
-        for entity in entities:
-            entity[1] = int(entity[1])
+        entities: list = [entity.split(":") for entity in entities]
+
+        for item in entities:
+            item[1] = int(item[1])
         entities.sort(key=operator.itemgetter(1), reverse=True)
+
         pretty_print = [[name, initiative] for name, initiative in entities]
         pretty_print = tabulate.tabulate(
             [["Name", "Initiative"], *pretty_print],
