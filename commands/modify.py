@@ -1,11 +1,11 @@
-import logging
 import string
 
 import interactions
 import requests
-import validators
+from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
 from lib import json_lib, misc
+from lib.misc import user_check
 
 
 class ModifyAttributes(interactions.Extension):
@@ -55,6 +55,9 @@ class ModifyAttributes(interactions.Extension):
         dmg: str,
         attribute: str = "",
     ):
+        if await user_check(ctx):
+            return
+
         try:
             misc.decipher_all([hit, dmg])
             if attribute:
@@ -95,6 +98,8 @@ class ModifyAttributes(interactions.Extension):
         ],
     )
     async def modify_char(self, ctx: CommandContext, key: str, value: str):
+        if await user_check(ctx):
+            return
         output, reply, color = await json_lib.modify_param(
             ctx, access="char", key=key, value=value
         )
@@ -122,13 +127,15 @@ class ModifyAttributes(interactions.Extension):
         ],
     )
     async def modify_custom(self, ctx: CommandContext, key: str, value: str):
+        if await user_check(ctx):
+            return
         try:
             misc.decipher_dice(value)
-        except Exception as e:
+        except TypeError as error:
             return await ctx.send(
                 embeds=misc.quick_embed(
                     "Error",
-                    f"Not a valid dice roll: {value}\nOnly valid dice syntax is allowed\n{e}",
+                    f"Not a valid dice roll: {value}\nOnly valid dice syntax is allowed\n{error}",
                     "error",
                 ),
                 ephemeral=True,
@@ -139,148 +146,6 @@ class ModifyAttributes(interactions.Extension):
         await ctx.send(
             embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
         )
-
-    @modify.subcommand(
-        name="spell",
-        description="Modify prepared spells in your spellbook.",
-        options=[
-            interactions.Option(
-                name="spell",
-                description="Name of the spell you want to modify. Eg: `Bless`, `Bane`",
-                type=interactions.OptionType.STRING,
-                autocomplete=True,
-                required=True,
-            ),
-            interactions.Option(
-                name="description",
-                description="Description of the spell. (pastebin links are allowed)",
-                type=interactions.OptionType.STRING,
-                required=True,
-            ),
-            interactions.Option(
-                name="level",
-                description="Level of the spell.",
-                type=interactions.OptionType.STRING,
-                choices=misc.Choices().from_list(
-                    [
-                        "Cantrip",
-                        "1st",
-                        "2nd",
-                        "3rd",
-                        "4th",
-                        "5th",
-                        "6th",
-                        "7th",
-                        "8th",
-                        "9th",
-                    ]
-                ),
-                required=True,
-            ),
-            interactions.Option(
-                name="school",
-                description="School of the spell.",
-                type=interactions.OptionType.STRING,
-                choices=misc.Choices().from_list(
-                    [
-                        "Abjuration",
-                        "Conjuration",
-                        "Divination",
-                        "Enchantment",
-                        "Evocation",
-                        "Illusion",
-                        "Necromancy",
-                        "Transmutation",
-                    ]
-                ),
-                required=True,
-            ),
-            interactions.Option(
-                name="casting_time",
-                description="Time taken to cast the spell. Eg: `1 action`, `1 reaction`",
-                type=interactions.OptionType.STRING,
-                required=True,
-            ),
-            interactions.Option(
-                name="range",
-                description="Range of the spell. Eg: `120 ft`, `Touch`",
-                type=interactions.OptionType.STRING,
-                required=True,
-            ),
-            interactions.Option(
-                name="components",
-                description="Components needed for the spell. Eg: `V`, `S`, `M: 100gp`, `V, S, M`",
-                type=interactions.OptionType.STRING,
-                required=True,
-            ),
-            interactions.Option(
-                name="duration",
-                description="How long the spell lasts. Eg: `Concentration, upto 1 minutes`, `Instantaneous`",
-                type=interactions.OptionType.STRING,
-                required=True,
-            ),
-            interactions.Option(
-                name="saving_throw",
-                description="Saving throw for the spell. (if it has any)",
-                type=interactions.OptionType.STRING,
-                required=False,
-            ),
-            interactions.Option(
-                name="source",
-                description="Source of the spell. Eg: `PHB 74`, `TCoE 110`, `MotM`, `XGtE`",
-                type=interactions.OptionType.STRING,
-                required=False,
-            ),
-        ],
-    )
-    async def modify_spells(
-        self,
-        ctx: CommandContext,
-        spell: str,
-        description: str,
-        level: str,
-        school: str,
-        casting_time: str,
-        range: str,
-        components: str,
-        duration: str,
-        saving_throw: str = "",
-        source: str = "",
-    ):
-        if validators.url(description):
-            description = requests.get(description).text
-        spell = string.capwords(spell)
-
-        spell_attr = {
-            "Description": description,
-            "Level": level,
-            "School": school,
-            "Casting Time": casting_time,
-            "Range": range,
-            "Components": components,
-            "Duration": duration,
-            "Saving Throw": saving_throw,
-            "Source": source,
-        }
-        title, _, color = await json_lib.modify_param(
-            ctx, access="spells", key=spell, value=spell_attr
-        )
-
-        embeds = misc.create_spell_embed(
-            ctx,
-            spell,
-            description,
-            level,
-            school,
-            casting_time,
-            range,
-            components,
-            duration,
-            saving_throw,
-            source,
-        )
-        embeds.insert(0, misc.quick_embed(title, "", color))
-        await ctx.send(embeds=embeds, ephemeral=True)
 
     @modify.subcommand(
         name="skill",
@@ -302,13 +167,70 @@ class ModifyAttributes(interactions.Extension):
         ],
     )
     async def modify_skill(self, ctx: CommandContext, skill: str, value: int):
-
+        if await user_check(ctx):
+            return
         output, reply, color = await json_lib.modify_param(
             ctx, access="skills", key=string.capwords(skill), value=value
         )
         await ctx.send(
             embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
         )
+
+    @interactions.extension_command(
+        name="save",
+        description="Saves a key value pair.",
+    )
+    async def save(self, _ctx: interactions.CommandContext):
+        pass
+
+    @save.subcommand(
+        name="skills",
+        description="Saves initial skills.",
+        options=[
+            interactions.Option(
+                name="attributes",
+                description="Save all skills at once in alphabetical order. Eg: `1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18`",
+                type=interactions.OptionType.STRING,
+                required=True,
+            )
+        ],
+    )
+    async def save_skills(self, ctx: interactions.CommandContext, attributes: str):
+        if await user_check(ctx):
+            return
+        title, desc, outcome = await json_lib.write_stats(ctx.author, attributes)
+        await ctx.send(embeds=misc.quick_embed(title, desc, outcome), ephemeral=True)
+
+    @save.subcommand(
+        name="spell",
+        description="Save a spell from the wiki.",
+        options=[
+            interactions.Option(
+                name="spell",
+                description="Name of the spell.",
+                type=interactions.OptionType.STRING,
+                required=True,
+            )
+        ],
+    )
+    async def spell(self, ctx: CommandContext, spell: str):
+        if await user_check(ctx):
+            return
+        spell_url = spell.lower().replace(" ", "-").replace("'", "")
+        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
+        page = requests.get(spell_url)
+        soup = BeautifulSoup(
+            page.text, "html.parser", parse_only=SoupStrainer("div", "main-content")
+        )
+
+        name, spell_json = json_lib.spell_to_dict(soup.get_text())
+        title, _, color = await json_lib.modify_param(
+            ctx, access="spells", key=name, value=spell_json
+        )
+
+        spell_embed = misc.create_spell_embed_unstable(ctx, name, spell_json)
+        spell_embed.insert(0, misc.quick_embed(title, "Modified.", color))
+        await ctx.send(embeds=spell_embed, ephemeral=True)
 
 
 def setup(client):

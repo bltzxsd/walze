@@ -1,8 +1,8 @@
-import interactions
 import string
-from lib import misc
-import logging
+
+import interactions
 from interactions import CommandContext
+from lib import misc
 
 
 class AutoComplete(interactions.Extension):
@@ -14,14 +14,14 @@ class AutoComplete(interactions.Extension):
     async def weapon_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
         try:
-            weapons = content[str(ctx.author.id)]["weapons"]
-        except:
+            weapons: dict = content.get(str(ctx.author.id)).get("weapons")
+        except KeyError:
             return
 
         autocomplete = [
             interactions.Choice(name=param, value=param)
             for param in weapons.keys()
-            if string.capwords(value) in param
+            if value.lower() in param.lower()
         ]
         await ctx.populate(autocomplete)
 
@@ -30,31 +30,31 @@ class AutoComplete(interactions.Extension):
     async def skill_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
         try:
-            skills = content[str(ctx.author.id)]["stats"]
-        except:
+            skills = content.get(str(ctx.author.id)).get("stats")
+        except KeyError:
             return
 
         autocomplete = [
             interactions.Choice(name=param, value=param)
             for param in skills.keys()
-            if value.capitalize() in param
+            if value.lower() in param.lower()
         ]
         await ctx.populate(autocomplete)
 
     @interactions.extension_autocomplete("cast", "spell")
-    @interactions.extension_autocomplete("modify", "spell")
+    # @interactions.extension_autocomplete("save", "spell")
     async def cast_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
         try:
             spells = content.get(str(ctx.author.id)).get("spells")
             spells = spells.keys()
-        except:
+        except KeyError:
             return
 
         autocomplete = [
             misc.create_choice(spell)
             for spell in spells
-            if string.capwords(value) in spell
+            if value.lower() in spell.lower()
         ]
         await ctx.populate(autocomplete)
 
@@ -64,16 +64,16 @@ class AutoComplete(interactions.Extension):
         content = await misc.open_stats(ctx.author)
         try:
             parameters = content.get(str(ctx.author.id)).get("custom")
-        except:
+        except KeyError:
             return
 
         autocomplete = [
             interactions.Choice(name=param, value=param)
             for param in parameters.keys()
-            if string.capwords(value) in param
+            if value.lower() in param.lower()
         ]
         await ctx.populate(autocomplete)
-    
+
     @interactions.extension_autocomplete("modify", "char")
     async def m_char_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
@@ -82,13 +82,13 @@ class AutoComplete(interactions.Extension):
             params.pop("weapon", None)
             params.pop("stats", None)
             params.pop("custom", None)
-        except:
+        except KeyError:
             return
 
         autocomplete = [
             interactions.Choice(name=string.capwords(param), value=param)
             for param in params.keys()
-            if value in param
+            if value.lower() in param.lower()
         ]
         await ctx.populate(autocomplete)
 

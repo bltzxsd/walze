@@ -1,7 +1,7 @@
 import json
+import os
 import random
 import re
-import textwrap
 
 import aiofiles
 import interactions
@@ -33,7 +33,7 @@ stats = [
 
 class CharRepr:
     def __init__(self, author: Member):
-        self.repr = {
+        self.character = {
             str(author.id): {
                 "name": author.user.username,
                 "stats": {},
@@ -44,6 +44,9 @@ class CharRepr:
                 "initiative": "",
             }
         }
+
+    def character(self) -> dict:
+        return self.character
 
 
 def quick_embed(title: str, desc: str, ty: str):
@@ -91,12 +94,14 @@ dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*")
 
 
 def find_dice(string: str):
-    return sorted([*set(dice_syntax.findall(string))])
+    return sorted(
+        [*set(dice_syntax.findall(string))], key=lambda x: (int(x.split("d")[0]))
+    )
 
 
 def decipher_dice(roll: str) -> tuple[int, int, int]:
     if not dice_syntax.match(roll):
-        raise Exception(f"Invalid Syntax for roll: {roll}")
+        raise TypeError(f"Invalid Syntax for roll: {roll}")
 
     rolls = 0
     sides = 0
@@ -123,6 +128,11 @@ def decipher_dice(roll: str) -> tuple[int, int, int]:
 
 class CharacterSheets:
     def __init__(self, filename: str):
+        from pathlib import Path
+
+        if not Path(filename).is_file():
+            open(filename, "w+", encoding="utf-8").close()
+
         self.__file = open(filename, "r", encoding="utf-8")
 
     def __del__(self):
@@ -150,7 +160,7 @@ async def open_stats(author: Member):
 
     if content.get(str(author.id)) is None or content == {}:
         async with aiofiles.open("stats.json", "w") as save:
-            content.update(char)
+            content.update(char.character())
             await save.write(json.dumps(content, indent=4))
 
     return content
@@ -220,83 +230,10 @@ def decipher_all(syntax: list[str]):
         try:
             rolls, sides, mod = decipher_dice(dice_syn)
             rollable.append((rolls, sides, mod))
-        except:
+        except TypeError:
             pass
 
     return rollable
-
-
-def create_spell_embed(
-    ctx: CommandContext,
-    spell: str,
-    description: str,
-    level: str,
-    school: str,
-    casting_time: str,
-    range: str,
-    components: str,
-    duration: str,
-    saving_throw: str = "",
-    source: str = "",
-):
-
-    author = ctx.author
-    match school:
-        case "Abjuration":
-            spell_icon = "https://i.stack.imgur.com/uzFcs.png"
-        case "Conjuration":
-            spell_icon = "https://i.stack.imgur.com/8DWrI.png"
-        case "Divination":
-            spell_icon = "https://i.stack.imgur.com/VfeKS.png"
-        case "Enchantment":
-            spell_icon = "https://i.stack.imgur.com/0YuqE.png"
-        case "Evocation":
-            spell_icon = "https://i.stack.imgur.com/lwSxi.png"
-        case "Illusion":
-            spell_icon = "https://i.stack.imgur.com/bHkjS.png"
-        case "Necromancy":
-            spell_icon = "https://i.stack.imgur.com/b9tgW.png"
-        case "Transmutation":
-            spell_icon = "https://i.stack.imgur.com/wPeGf.png"
-        case _:
-            pass
-
-    title = spell
-    # description = description.replace("\n", "")
-
-    embed_initial = Embed(
-        title=title,
-        description=f"*{level} level, {school}*",
-        thumbnail=EmbedImageStruct(url=spell_icon, height=200, width=200),
-        color=0xE2E0DD,
-    )
-
-    embed_initial.set_author(author.name, icon_url=author_url(author, ctx.guild_id))
-    meta = f"**Casting Time**: {casting_time}\n"
-    meta += f"**Range**: {range}\n"
-    meta += f"**Components**: {components}\n"
-    meta += f"**Duration**: {duration}\n"
-    if saving_throw:
-        meta += f"\n**Saving Throw**: {saving_throw}"
-
-    embed_initial.add_field(name="\u200B", value=meta)
-    spell_desc = textwrap.wrap(description, width=1024)
-    starter_desc = spell_desc.pop(0)
-    embed_initial.add_field(name="\u200B", value=starter_desc)
-
-    # we are done with embed initial
-    # add left over text to more embeds.
-    embeds = (
-        [Embed(description=desc, color=0xE2E0DD) for desc in spell_desc]
-        if len(spell_desc) > 0
-        else []
-    )
-
-    embeds.insert(0, embed_initial)
-    if source:
-        embeds[-1].set_footer(source)
-
-    return embeds
 
 
 def create_choice(choice: str, value: str = ""):
@@ -317,7 +254,7 @@ def author_url(author: Member, guild_id: interactions.Snowflake):
         try:
             base_url = "https://cdn.discordapp.com/avatars"
             icon = f"{base_url}/{author.id}/{author.avatar}.webp"
-        except:
+        except Exception:
             icon = ""
 
     return icon
@@ -331,3 +268,124 @@ def disable(buttons: list[interactions.Button]):
 def to_button(label: str, style):
     return interactions.Button(style=style, label=label, custom_id=label)
 
+
+# ttps://stackoverflow.com/a/65038809
+# hope the person who wrote this is doing amazing rn. actual lifesaver
+def wrap_spell(source_text, separator_chars=["."], width=1024, keep_separators=True):
+    current_length = 0
+    latest_separator = -1
+    current_chunk_start = 0
+    output = ""
+    char_index = 0
+    while char_index < len(source_text):
+        if source_text[char_index] in separator_chars:
+            latest_separator = char_index
+        output += source_text[char_index]
+        current_length += 1
+        if current_length == width:
+            if latest_separator >= current_chunk_start:
+                # Valid earlier separator, cut there
+                cutting_length = char_index - latest_separator
+                if not keep_separators:
+                    cutting_length += 1
+                if cutting_length:
+                    output = output[:-cutting_length]
+                output += "<linebreak>"
+                current_chunk_start = latest_separator + 1
+                char_index = current_chunk_start
+            else:
+                # No separator found, hard cut
+                output += "<linebreak>"
+                current_chunk_start = char_index + 1
+                latest_separator = current_chunk_start - 1
+                char_index += 1
+            current_length = 0
+        else:
+            char_index += 1
+    return output
+
+
+def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dict):
+    level_school = spell_json.get("School")
+    casting_time = spell_json.get("Casting Time")
+    spell_range = spell_json.get("Range")
+    components = spell_json.get("Components")
+    duration = spell_json.get("Duration")
+    description = spell_json.get("Description")
+    at_higher_levels = spell_json.get("At Higher Levels")
+    source = spell_json.get("Source")
+
+    author = ctx.author
+    title = spell
+    school: str = level_school.split(" ")[1].replace(".", "")
+
+    match school:
+        case "abjuration":
+            spell_icon = "https://i.stack.imgur.com/uzFcs.png"
+        case "conjuration":
+            spell_icon = "https://i.stack.imgur.com/8DWrI.png"
+        case "divination":
+            spell_icon = "https://i.stack.imgur.com/VfeKS.png"
+        case "enchantment":
+            spell_icon = "https://i.stack.imgur.com/0YuqE.png"
+        case "evocation":
+            spell_icon = "https://i.stack.imgur.com/lwSxi.png"
+        case "illusion":
+            spell_icon = "https://i.stack.imgur.com/bHkjS.png"
+        case "necromancy":
+            spell_icon = "https://i.stack.imgur.com/b9tgW.png"
+        case "transmutation":
+            spell_icon = "https://i.stack.imgur.com/wPeGf.png"
+        case _:
+            spell_icon = ""
+
+    embed_initial = interactions.Embed(
+        title=title,
+        description=f"*{level_school}*",
+        thumbnail=interactions.EmbedImageStruct(url=spell_icon, height=200, width=200),
+        color=0xE2E0DD,
+    )
+    embed_initial.set_author(author.name, icon_url=author_url(author, ctx.guild_id))
+    meta = f"**Casting Time**: {casting_time}\n"
+    meta += f"**Range**: {spell_range}\n"
+    meta += f"**Components**: {components}\n"
+    meta += f"**Duration**: {duration}\n"
+    embed_initial.add_field(
+        name="Meta",
+        value=meta,
+    )
+
+    if len(description) > 1024:  # embed limit
+        split_descriptions = wrap_spell(description).split("<linebreak>")
+    else:
+        split_descriptions = [description]
+
+    first_desc = split_descriptions.pop(0)
+    embed_initial.add_field(name="Description", value=first_desc)
+    embeds = (
+        [
+            interactions.Embed(description=desc, color=0xE2E0DD)
+            for desc in split_descriptions
+        ]
+        if len(split_descriptions) > 0
+        else []
+    )
+    embeds.insert(0, embed_initial)
+    if at_higher_levels:
+        embeds[-1].add_field(name="At Higher Levels", value=at_higher_levels)
+
+    embeds[-1].set_footer(source)
+    return embeds
+
+
+banned = os.getenv("BARRED")
+
+
+async def user_check(ctx, barred=[banned]):
+    if str(ctx.author.id) in barred or str(ctx.user.id) in barred:
+        await ctx.send(
+            embeds=quick_embed("Nah", "I'm not playing. Use your sheet.", "error"),
+            ephemeral=True,
+        )
+        return True
+    return False

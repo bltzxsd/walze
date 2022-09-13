@@ -1,33 +1,25 @@
-import asyncio
-import io
-import json
 import logging
-import operator
 import os
-import string
 import sys
 
 import interactions
-from interactions.ext import wait_for
 import pyfiglet
-import requests
-import validators
 from dotenv import load_dotenv
+from interactions.ext import wait_for
 from py_expression_eval import Parser
 
-from lib import json_lib
 from lib import misc
-from lib.misc import decipher_dice, open_stats, quick_embed
+from lib.misc import quick_embed
 
 synced: bool = False
 
 load_dotenv()
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
-    filename="bot.log",
+    # filename="bot.log",
 )
 
 bot = interactions.Client(
@@ -35,8 +27,6 @@ bot = interactions.Client(
 )
 bot.load("interactions.ext.files")
 wait_for.setup(bot)
-
-hq = os.getenv("HQ")
 
 
 @bot.event
@@ -50,8 +40,8 @@ async def on_ready():
 
 @bot.event
 async def on_command(ctx: interactions.CommandContext):
-    logging.debug(
-        f"Command: {ctx.data.name}#{ctx.data.id} by {ctx.author} in guild {ctx.guild_id}:#{ctx.channel}"
+    logging.info(
+        f"Command: {ctx.data.name} by {ctx.author} in guild {ctx.guild_id}:#{ctx.channel}"
     )
 
 
@@ -63,13 +53,6 @@ async def on_command(ctx: interactions.CommandContext):
 #         ),
 #         ephemeral=True,
 #     )
-
-
-
-
-
-
-
 
 
 @bot.command(
@@ -168,189 +151,10 @@ async def roll(
     await ctx.send(embeds=embed, ephemeral=ephemeral)
 
 
-
-
-
-@bot.command(
-    name="attack",
-    description="Rolls a weapon attack from your inventory.",
-    options=[
-        interactions.Option(
-            name="weapon",
-            description="Name of the weapon to attack with.",
-            type=interactions.OptionType.STRING,
-            autocomplete=True,
-            required=True,
-        ),
-        interactions.Option(
-            name="implication",
-            description="Implication type for the weapon.",
-            type=interactions.OptionType.STRING,
-            choices=[
-                interactions.Choice(name="Hit", value="hit"),
-                interactions.Choice(name="Damage", value="dmg"),
-                interactions.Choice(name="Attribute", value="attr"),
-            ],
-            required=True,
-        ),
-    ],
-)
-async def attack(ctx: interactions.CommandContext, weapon: str, implication: str):
-    content = await open_stats(ctx.author)
-    try:
-        weapons = content[str(ctx.author.id)]["weapons"]
-        weapon = weapons[string.capwords(weapon)]
-    except:
-        return await ctx.send(
-            embeds=quick_embed("Error", "No such weapon available!", "error"),
-            ephemeral=True,
-        )
-    match implication:
-        case "hit":
-            weapon = weapon["hit"]
-        case "dmg":
-            weapon = weapon["dmg"]
-        case "attr":
-            weapon = weapon["attribute"]
-            if not weapon:
-                return await ctx.send(
-                    embeds=quick_embed(
-                        "Error", "Weapon does not have an attribute!", "error"
-                    ),
-                    ephemeral=True,
-                )
-
-    rolls, sides, mod = misc.decipher_dice(weapon)
-    result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
-    embed = misc.roll_embed(ctx.author, rolls, sides, result, generated_values, mod=mod)
-    await ctx.send(embeds=embed)
-
-
-@bot.command(
-    name="skill",
-    description="Roll for skill in saved parameter.",
-    options=[
-        interactions.Option(
-            name="skill",
-            description="Roll for the given skill. Eg: `Insight`, `Perception`",
-            type=interactions.OptionType.STRING,
-            autocomplete=True,
-            required=True,
-        )
-    ],
-)
-async def skill(ctx: interactions.CommandContext, skill: str):
-    content = await open_stats(ctx.author)
-    try:
-        skill = content[str(ctx.author.id)]["stats"][string.capwords(skill)]
-    except:
-        return await ctx.send(
-            embeds=quick_embed(
-                "Error", f"No such skill available! ({string.capwords(skill)})", "error"
-            ),
-            ephemeral=True,
-        )
-
-    rolls, sides, mod = 1, 20, skill
-    result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
-    embed = misc.roll_embed(ctx.author, rolls, sides, result, generated_values, mod=mod)
-    await ctx.send(embeds=embed)
-
-
-@bot.command(
-    name="initiative",
-    description="Roll for initiative.",
-)
-async def initiative(ctx: interactions.CommandContext):
-    content = await open_stats(ctx.author)
-    init = content[str(ctx.author.id)]["Initiative"]
-    if not init:
-        return await ctx.send(
-            embeds=quick_embed("Error", "Initiative has not been set.", "error"),
-            ephemeral=True,
-        )
-
-    try:
-        rolls, sides, mod = decipher_dice(init)
-    except ValueError as e:
-        return await ctx.send(
-            embeds=quick_embed("Error", f"Please report this!\n{e}", "error"),
-            ephemeral=True,
-        )
-
-    result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
-    embed = misc.roll_embed(ctx.author, rolls, sides, result, generated_values, mod=mod)
-    await ctx.send(embeds=embed)
-
-@bot.command(
-    name="save",
-    description="Saves a key value pair.",
-)
-async def save(_ctx: interactions.CommandContext):
-    pass
-
-
-@save.subcommand(
-    name="skills",
-    description="Saves initial skills.",
-    options=[
-        interactions.Option(
-            name="attributes",
-            description="Save all skills at once in alphabetical order. Eg: `1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18`",
-            type=interactions.OptionType.STRING,
-            required=True,
-        )
-    ],
-)
-async def save_skills(ctx: interactions.CommandContext, attributes: str):
-    title, desc, outcome = await json_lib.write_stats(ctx.author, attributes)
-    await ctx.send(embeds=quick_embed(title, desc, outcome), ephemeral=True)
-
-
-@bot.command(
-    name="retrieve",
-    description="Shows all saved parameters for your character.",
-    options=[
-        interactions.Option(
-            name="ephemeral",
-            description="Whether the reply should be visible only to the user.",
-            type=interactions.OptionType.BOOLEAN,
-        ),
-    ],
-)
-async def retrieve(ctx: interactions.CommandContext, ephemeral: bool = False):
-    try:
-        retrieved = await misc.open_stats(ctx.author)
-        retrieved = retrieved.get(str(ctx.author.id))
-    except Exception as error:
-        logging.error(error)
-        return await ctx.send(
-            embeds=quick_embed(
-                "Error", "You do not have any saved parameters!", "error"
-            ),
-            ephemeral=True,
-        )
-
-    retrieved = json.dumps(retrieve, indent=4)
-    if len(retrieve) > 1024:
-        file = io.StringIO(retrieve)
-        files = interactions.File(filename=f"{ctx.author.name}_stats.json", fp=file)
-        return await ctx.send(
-            embeds=quick_embed(f"{ctx.author.name}'s Parameters", "", "ok"),
-            files=files,
-            ephemeral=ephemeral,
-        )
-
-    await ctx.send(
-        embeds=quick_embed(
-            f"{ctx.author.name}'s Parameters",
-            f"```{retrieve}```",
-            "ok",
-        ),
-        ephemeral=ephemeral,
-    )
-
 bot.load("commands.base")
+bot.load("commands.rolls")
 bot.load("commands.modify")
+bot.load("commands.unstable")
 bot.load("commands.autocomplete")
 bot.start()
+

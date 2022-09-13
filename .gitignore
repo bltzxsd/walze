@@ -2,9 +2,6 @@
 __pycache__
 *.log
 *.json
-*.7z
 .vscode
-Procfile
-*.ico
 /output
 /.venv

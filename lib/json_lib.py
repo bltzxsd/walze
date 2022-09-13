@@ -15,12 +15,12 @@ async def modify_param(
 
     author = content[str(ctx.author.id)]
     try:
-        skills = author["stats"]
-        weapon = author["weapons"]
-        custom = author["custom"]
-        spells = author["spells"]
-        features = author["features"]
-    except:
+        skills = author.get("stats")
+        weapon = author.get("weapons")
+        custom = author.get("custom")
+        spells = author.get("spells")
+        features = author.get("features")
+    except KeyError:
         author["stats"] = {}
         author["weapons"] = {}
         author["custom"] = {}
@@ -46,12 +46,12 @@ async def modify_param(
     async with aiofiles.open("stats.json", "w") as save:
         try:
             value = int(value)
-        except:
+        except ValueError:
             pass
 
         try:
-            prev_value = level[key]
-        except:
+            prev_value = level.get(key)
+        except KeyError:
             prev_value = None
 
         level[key] = value
@@ -67,8 +67,8 @@ def create_skills(skills: str):
     skill_values = [int(value) for value in re.findall(r"-?\d+", skills)]
     try:
         assert len(skill_values) == 18
-    except AssertionError:
-        raise Exception(f"{skill_values}")
+    except AssertionError as exc:
+        raise AssertionError(f"{skill_values}") from exc
 
     skills: dict = {name: value for name, value in zip(misc.stats, skill_values)}
     return skills
@@ -77,10 +77,10 @@ def create_skills(skills: str):
 async def write_stats(author: Member, skills: str):
     try:
         skills = create_skills(skills)
-    except Exception as e:
+    except AssertionError as exc:
         return (
             "Error",
-            f"Invalid number of values provided ({len(skills)}). Needed: 18.\n{e}",
+            f"Invalid number of values provided ({len(skills)}). Needed: 18.\n{exc}",
             "error",
         )
     content = await misc.open_stats(author)
@@ -95,3 +95,41 @@ async def write_stats(author: Member, skills: str):
             f"```Previous Values:\n{prev}\nNew Values:\n{json.dumps(skills_json, indent=4)}```",
             "ok",
         )
+
+
+def spell_to_dict(web_spell: str) -> tuple[str, dict]:
+    spell_txt = web_spell.splitlines()[1:-9]
+    spell_txt = "\n".join(spell_txt).replace("\u2019", "'")
+    spell_splits: list[str] = spell_txt.splitlines()
+
+    for x in range(1, 4):
+        spell_splits.pop(x)
+
+    spell_lists = spell_splits[-1].split(". ")[-1]
+    name = spell_splits[0]
+    spell_source = spell_splits[3].split(": ")[-1]
+    level_school = spell_splits[4].split(": ")[-1].lower() + f". ({spell_lists})"
+    casting_time = spell_splits[5].split(": ")[-1]
+    spell_range = spell_splits[6].split(": ")[-1]
+    components = spell_splits[7].split(": ")[-1]
+    duration = spell_splits[8].split(": ")[-1]
+    proto_description = "\n".join(spell_splits[9:-1])
+
+    if "At Higher Levels." in proto_description:
+        proto_info = proto_description.split("At Higher Levels.")
+        description = "\n".join(proto_info[:-1])
+        at_higher_levels = proto_info[-1].strip()
+    else:
+        description = proto_description
+        at_higher_levels = ""
+
+    return name, {
+        "School": level_school,
+        "Casting Time": casting_time,
+        "Range": spell_range,
+        "Components": components,
+        "Duration": duration,
+        "Description": description,
+        "At Higher Levels": at_higher_levels,
+        "Source": spell_source,
+    }
