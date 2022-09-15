@@ -173,7 +173,7 @@ class RollCommands(interactions.Extension):
         if await user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
-        init = content.get(str(ctx.author.id)).get("Initiative")
+        init = content.get(str(ctx.author.id)).get("initiative")
         if not init:
             return await ctx.send(
                 embeds=misc.quick_embed(
@@ -194,7 +194,9 @@ class RollCommands(interactions.Extension):
         embed = misc.roll_embed(
             ctx.author, rolls, sides, result, generated_values, mod=mod
         )
-        await ctx.send(embeds=embed)
+        syntax_embed = misc.quick_embed("Initiative Syntax", f"{ctx.author.user.username}:{result}", "ok")
+        syntax_embed.set_footer("Copy this for the `/sort` command!")
+        await ctx.send(embeds=[embed, syntax_embed])
 
     @interactions.extension_command(
         name="skill",
