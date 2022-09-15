@@ -27,7 +27,7 @@ class RollCommands(interactions.Extension):
             )
         ],
     )
-    async def custom(self, ctx: CommandContext, name: str):
+    async def custom(self, ctx: CommandContext, custom: str):
         if await user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
