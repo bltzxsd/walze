@@ -101,7 +101,7 @@ def find_dice(string: str):
 
 def decipher_dice(roll: str) -> tuple[int, int, int]:
     if not dice_syntax.match(roll):
-        raise TypeError(f"Invalid Syntax for roll: {roll}")
+        raise ValueError(f"Invalid Syntax for roll: {roll}")
 
     rolls = 0
     sides = 0
@@ -230,8 +230,8 @@ def decipher_all(syntax: list[str]):
         try:
             rolls, sides, mod = decipher_dice(dice_syn)
             rollable.append((rolls, sides, mod))
-        except TypeError:
-            pass
+        except ValueError:
+            continue
 
     return rollable
 
