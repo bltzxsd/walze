@@ -57,7 +57,13 @@ class ModifyAttributes(interactions.Extension):
     ):
         if await user_check(ctx):
             return
-
+        try:
+            dmg = int(dmg) - 1
+            op = "+" if dmg >= 0 else "" 
+            dmg = "1d1" + op + str(dmg)
+        except:
+            pass
+        
         try:
             misc.decipher_all([hit, dmg])
             if attribute:
@@ -70,7 +76,7 @@ class ModifyAttributes(interactions.Extension):
                 ephemeral=True,
             )
         value = {"hit": hit, "dmg": dmg, "attribute": attribute}
-
+        
         output, reply, color = await json_lib.modify_param(
             ctx, access="weapons", key=string.capwords(weapon), value=value
         )
@@ -97,11 +103,11 @@ class ModifyAttributes(interactions.Extension):
             ),
         ],
     )
-    async def modify_char(self, ctx: CommandContext, key: str, value: str):
+    async def modify_char(self, ctx: CommandContext, char: str, value: str):
         if await user_check(ctx):
             return
         output, reply, color = await json_lib.modify_param(
-            ctx, access="char", key=key, value=value
+            ctx, access="char", key=char, value=value
         )
         await ctx.send(
             embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
