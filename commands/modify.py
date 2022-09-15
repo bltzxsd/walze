@@ -131,7 +131,7 @@ class ModifyAttributes(interactions.Extension):
             return
         try:
             misc.decipher_dice(value)
-        except TypeError as error:
+        except ValueError as error:
             return await ctx.send(
                 embeds=misc.quick_embed(
                     "Error",
@@ -217,8 +217,17 @@ class ModifyAttributes(interactions.Extension):
         if await user_check(ctx):
             return
         spell_url = spell.lower().replace(" ", "-").replace("'", "")
-        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
+        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url 
         page = requests.get(spell_url)
+        if page.status_code != 200:
+            return await ctx.send(
+                embeds=misc.quick_embed(
+                    "Failed to fetch spell",
+                    f"Please check if spell exists and try again. Status Code: {page.status_code}",
+                    "error",
+                ),
+                ephemeral=True,
+            )
         soup = BeautifulSoup(
             page.text, "html.parser", parse_only=SoupStrainer("div", "main-content")
         )
