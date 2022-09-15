@@ -32,7 +32,7 @@ class RollCommands(interactions.Extension):
             return
         content = await misc.open_stats(ctx.author)
         try:
-            parameter = content.get(str(ctx.author.id)).get("custom").get(name)
+            parameter = content.get(str(ctx.author.id)).get("custom").get(custom)
         except KeyError:
             return await ctx.send(
                 embeds=misc.quick_embed(
