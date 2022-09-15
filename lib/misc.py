@@ -45,9 +45,6 @@ class CharRepr:
             }
         }
 
-    def character(self) -> dict:
-        return self.character
-
 
 def quick_embed(title: str, desc: str, ty: str):
     match ty:
@@ -160,7 +157,7 @@ async def open_stats(author: Member):
 
     if content.get(str(author.id)) is None or content == {}:
         async with aiofiles.open("stats.json", "w") as save:
-            content.update(char.character())
+            content.update(char.character)
             await save.write(json.dumps(content, indent=4))
 
     return content
