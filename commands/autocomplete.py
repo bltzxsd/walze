@@ -66,7 +66,6 @@ class AutoComplete(interactions.Extension):
             parameters = content.get(str(ctx.author.id)).get("custom")
         except KeyError:
             return
-
         autocomplete = [
             interactions.Choice(name=param, value=param)
             for param in parameters.keys()
@@ -75,13 +74,16 @@ class AutoComplete(interactions.Extension):
         await ctx.populate(autocomplete)
 
     @interactions.extension_autocomplete("modify", "char")
-    async def m_char_autocomplete(self, ctx: CommandContext, value: str = ""):
+    async def char_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
         try:
             params = content.get(str(ctx.author.id))
-            params.pop("weapon", None)
+            # we don't want these to be modified
+            params.pop("weapons", None)
             params.pop("stats", None)
             params.pop("custom", None)
+            params.pop("spells", None)
+            params.pop("features", None)
         except KeyError:
             return
 
