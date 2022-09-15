@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 import aiofiles
@@ -44,10 +45,11 @@ async def modify_param(
             return "Error", "Access Level not specified", "error"
 
     async with aiofiles.open("stats.json", "w") as save:
-        try:
-            value = int(value)
-        except ValueError:
-            pass
+        if isinstance(value, str):
+            try:
+                value = int(value)
+            except ValueError:
+                pass
 
         try:
             prev_value = level.get(key)
