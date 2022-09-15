@@ -24,10 +24,20 @@ class RollCommands(interactions.Extension):
                 type=interactions.OptionType.STRING,
                 autocomplete=True,
                 required=True,
-            )
+            ),
+            interactions.Option(
+                name="implication",
+                description="Choose if the roll should have an advantage or disadvantage.",
+                type=interactions.OptionType.STRING,
+                choices=[
+                    interactions.Choice(name="Advantage", value="adv"),
+                    interactions.Choice(name="Disadvantage", value="dis"),
+                ],
+                required=False,
+            ),
         ],
     )
-    async def custom(self, ctx: CommandContext, custom: str):
+    async def custom(self, ctx: CommandContext, custom: str, implication: str = ""):
         if await user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
@@ -42,9 +52,9 @@ class RollCommands(interactions.Extension):
             )
 
         rolls, sides, mod = misc.decipher_dice(parameter)
-        result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
+        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
         embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, mod=mod
+            ctx.author, rolls, sides, result, generated_values, implication, mod
         )
         await ctx.send(embeds=embed)
 
@@ -196,10 +206,22 @@ class RollCommands(interactions.Extension):
                 type=interactions.OptionType.STRING,
                 autocomplete=True,
                 required=True,
-            )
+            ),
+            interactions.Option(
+                name="implication",
+                description="Choose if the roll should have an advantage or disadvantage.",
+                type=interactions.OptionType.STRING,
+                choices=[
+                    interactions.Choice(name="Advantage", value="adv"),
+                    interactions.Choice(name="Disadvantage", value="dis"),
+                ],
+                required=False,
+            ),
         ],
     )
-    async def skill(self, ctx: interactions.CommandContext, skill: str):
+    async def skill(
+        self, ctx: interactions.CommandContext, skill: str, implication: str = ""
+    ):
         if await user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
@@ -218,9 +240,9 @@ class RollCommands(interactions.Extension):
             )
 
         rolls, sides, mod = 1, 20, skill
-        result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
+        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
         embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, mod=mod
+            ctx.author, rolls, sides, result, generated_values, implication, mod
         )
         await ctx.send(embeds=embed)
 
@@ -236,7 +258,7 @@ class RollCommands(interactions.Extension):
                 required=True,
             ),
             interactions.Option(
-                name="implication",
+                name="atk",
                 description="Implication type for the weapon.",
                 type=interactions.OptionType.STRING,
                 choices=[
@@ -249,7 +271,11 @@ class RollCommands(interactions.Extension):
         ],
     )
     async def attack(
-        self, ctx: interactions.CommandContext, weapon: str, implication: str
+        self,
+        ctx: interactions.CommandContext,
+        weapon: str,
+        atk: str,
+        implication: str = "",
     ):
         if await user_check(ctx):
             return
@@ -262,7 +288,7 @@ class RollCommands(interactions.Extension):
                 embeds=misc.quick_embed("Error", "No such weapon available!", "error"),
                 ephemeral=True,
             )
-        match implication:
+        match atk:
             case "hit":
                 weapon = weapon["hit"]
             case "dmg":
@@ -278,9 +304,9 @@ class RollCommands(interactions.Extension):
                     )
 
         rolls, sides, mod = misc.decipher_dice(weapon)
-        result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
+        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
         embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, mod=mod
+            ctx.author, rolls, sides, result, generated_values, implication, mod
         )
         await ctx.send(embeds=embed)
 
