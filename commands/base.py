@@ -51,7 +51,7 @@ class BaseCommands(interactions.Extension):
         ],
     )
     async def sort(self, ctx: CommandContext, entities: str):
-        entities = re.findall(r"[a-zA-Z]*\d*:\d*", entities)
+        entities = re.findall(constants.entities_syntax, entities)
         entities: list = [entity.split(":") for entity in entities]
 
         for item in entities:
