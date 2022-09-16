@@ -2,16 +2,15 @@ import io
 import json
 import logging
 import operator
-import os
 import re
 import sys
 
 import interactions
 import tabulate
 from interactions import CommandContext
-from lib import misc
+from lib import constants, misc
 
-hq = os.getenv("HQ")
+scope = constants.config.owner.get("servers", [])
 
 
 class BaseCommands(interactions.Extension):
@@ -31,9 +30,9 @@ class BaseCommands(interactions.Extension):
             )
         )
 
-    @interactions.extension_command(name="kill", description="Kill bot.")
+    @interactions.extension_command(name="kill", description="Kill bot.", scope=scope)
     async def kill(self, ctx: CommandContext):
-        if ctx.author.id == int(os.getenv("OWNER")):
+        if int(ctx.author.id) == constants.config.owner.get("id", 0):
             await ctx.send("Killing bot.", ephemeral=True)
             await sys.exit(0)
         else:
