@@ -53,10 +53,18 @@ async def on_command(ctx: interactions.CommandContext):
             description="Expression to be calculated. Eg: `1 + 1 * 1 - 1 ^ 1 / 1`",
             type=interactions.OptionType.STRING,
             required=True,
-        )
+        ),
+        interactions.Option(
+            name="ephemeral",
+            description="Whether the result should only be visible to the user.",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
-async def evaluate(ctx: interactions.CommandContext, expr: str):
+async def evaluate(
+    ctx: interactions.CommandContext, expr: str, ephemeral: bool = False
+):
     parser = Parser()
     try:
         expression = parser.parse(expr).evaluate({})
@@ -68,7 +76,6 @@ async def evaluate(ctx: interactions.CommandContext, expr: str):
         figlet = figlet.replace("`", "\u200B`")
         desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
         title, status = f"Evaluation: {expr}", "ok"
-        ephemeral = False
 
     embed = quick_embed(title, desc, status)
     embed.set_footer(f"{expression}")
