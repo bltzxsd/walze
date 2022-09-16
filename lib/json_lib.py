@@ -4,7 +4,7 @@ import re
 import aiofiles
 from interactions import CommandContext, Member
 
-import lib.misc as misc
+from lib import misc
 
 
 async def modify_param(
