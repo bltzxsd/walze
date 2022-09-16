@@ -6,6 +6,9 @@ from lib import config
 # config
 config = config.Config()
 
+# base
+entities_syntax = re.compile(r"[a-zA-Z]+\d*:\d*")
+
 # misc
 dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*")
 
