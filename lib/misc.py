@@ -1,5 +1,4 @@
 import json
-import os
 import random
 import re
 
@@ -8,6 +7,8 @@ import interactions
 import pyfiglet
 import requests
 from interactions import CommandContext, Embed, EmbedImageStruct, Member
+
+from lib import constants
 
 stats = [
     "Acrobatics",
@@ -87,17 +88,18 @@ def roll_dice(
     return final_num + mod, random_nums
 
 
-dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*")
+# dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*)
 
 
 def find_dice(string: str):
     return sorted(
-        [*set(dice_syntax.findall(string))], key=lambda x: (int(x.split("d")[0]))
+        [*set(constants.dice_syntax.findall(string))],
+        key=lambda x: (int(x.split("d")[0])),
     )
 
 
 def decipher_dice(roll: str) -> tuple[int, int, int]:
-    if not dice_syntax.match(roll):
+    if not constants.dice_syntax.match(roll):
         raise ValueError(f"Invalid Syntax for roll: {roll}")
 
     rolls = 0
@@ -123,34 +125,10 @@ def decipher_dice(roll: str) -> tuple[int, int, int]:
     return rolls, sides, mod
 
 
-class CharacterSheets:
-    def __init__(self, filename: str):
-        from pathlib import Path
-
-        if not Path(filename).is_file():
-            open(filename, "w+", encoding="utf-8").close()
-
-        self.__file = open(filename, "r", encoding="utf-8")
-
-    def __del__(self):
-        self.__file.close()
-
-    async def ready(self):
-        self.__file = self.__file
-
-    def read(self) -> str:
-        curr = self.__file.read()
-        self.__file.seek(0)
-        return curr
-
-
-sheets = CharacterSheets("stats.json")
-
-
 async def open_stats(author: Member):
     char = CharRepr(author)
     try:
-        content = sheets.read()
+        content = constants.sheets.read()
         content: dict = json.loads(content)
     except json.JSONDecodeError:
         content: dict = json.loads("{}")
@@ -375,11 +353,9 @@ def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dic
     return embeds
 
 
-banned = os.getenv("BARRED")
-
-
-async def user_check(ctx, barred=[banned]):
-    if str(ctx.author.id) in barred or str(ctx.user.id) in barred:
+async def user_check(ctx):
+    barred = constants.config.barred_users()
+    if int(ctx.author.id) in barred or int(ctx.user.id) in barred:
         await ctx.send(
             embeds=quick_embed("Nah", "I'm not playing. Use your sheet.", "error"),
             ephemeral=True,
