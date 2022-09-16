@@ -7,10 +7,12 @@ from lib import config
 config = config.Config()
 
 # base
-entities_syntax = re.compile(r"[a-zA-Z]+\d*:\d*")
+entities_syntax = re.compile(r"[a-zA-Z0-9]+\d*:\d+")
 
 # misc
 dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*")
+sanitize_dice = re.compile(r"[^\d+\-*\/d]")
+eval_string_str = re.compile(r"(\d+d\d+)")
 
 
 class CharacterSheets:

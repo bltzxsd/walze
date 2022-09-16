@@ -359,3 +359,16 @@ async def user_check(ctx):
         )
         return True
     return False
+
+
+def parse_compound_dice(dice_syntax):
+    def __dice(match):
+        a, b = match.group(1).split("d")
+        a, b = int(a), int(b)
+        return str(random.randint(a, a * b))
+
+    sanitize_dice = lambda s: re.sub(constants.sanitize_dice, "", s)
+
+    dice_syntax = sanitize_dice(dice_syntax)
+    eval_string = re.sub(constants.eval_string_str, __dice, dice_syntax)
+    return eval_string
