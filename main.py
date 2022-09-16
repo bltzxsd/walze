@@ -1,29 +1,19 @@
 import logging
-import os
 
 import interactions
 import pyfiglet
-from dotenv import load_dotenv
 from interactions.ext import wait_for
 from py_expression_eval import Parser
 
-from lib import misc
+from lib import constants, misc
 from lib.misc import quick_embed
 
 synced: bool = False
+discord_token = constants.config.tokens.get("discord", "")
+constants.config.set_logs()
 
-load_dotenv()
+bot = interactions.Client(token=discord_token, intents=interactions.Intents.DEFAULT)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%d/%m/%Y %I:%M:%S %p",
-    # filename="bot.log",
-)
-
-bot = interactions.Client(
-    token=os.getenv("DISCORD_TOKEN"), intents=interactions.Intents.DEFAULT
-)
 bot.load("interactions.ext.files")
 wait_for.setup(bot)
 
