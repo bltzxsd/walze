@@ -59,11 +59,11 @@ class ModifyAttributes(interactions.Extension):
             return
         try:
             dmg = int(dmg) - 1
-            op = "+" if dmg >= 0 else "" 
+            op = "+" if dmg >= 0 else ""
             dmg = "1d1" + op + str(dmg)
         except:
             pass
-        
+
         try:
             misc.decipher_all([hit, dmg])
             if attribute:
@@ -76,7 +76,7 @@ class ModifyAttributes(interactions.Extension):
                 ephemeral=True,
             )
         value = {"hit": hit, "dmg": dmg, "attribute": attribute}
-        
+
         output, reply, color = await json_lib.modify_param(
             ctx, access="weapons", key=string.capwords(weapon), value=value
         )
@@ -223,7 +223,7 @@ class ModifyAttributes(interactions.Extension):
         if await user_check(ctx):
             return
         spell_url = spell.lower().replace(" ", "-").replace("'", "")
-        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url 
+        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
         page = requests.get(spell_url)
         if page.status_code != 200:
             return await ctx.send(
