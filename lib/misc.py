@@ -88,9 +88,6 @@ def roll_dice(
     return final_num + mod, random_nums
 
 
-# dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*)
-
-
 def find_dice(string: str):
     return sorted(
         [*set(constants.dice_syntax.findall(string))],
