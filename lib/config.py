@@ -14,7 +14,7 @@ class Config:
     def __init__(self):
         filename = "Config.toml"
         if not Path(filename).is_file():
-            open(filename, "w", encoding="utf-8").close()
+            raise SystemExit("Config.toml not found.")
 
         with open(filename, "r") as config_file:
             config_file = config_file.read()
