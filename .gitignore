@@ -2,6 +2,7 @@
 __pycache__
 *.log
 *.json
-*.7z
 .vscode
-Procfile
+/output
+/.venv
+Config.toml
