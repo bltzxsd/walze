@@ -4,7 +4,9 @@ import operator
 import interactions
 import tabulate
 from interactions import CommandContext
-from lib import misc
+from lib import constants, misc
+
+scope = constants.config.owner.get("servers", [])
 
 
 class Unstable(interactions.Extension):
@@ -12,7 +14,7 @@ class Unstable(interactions.Extension):
         self.client: interactions.Client = client
 
     @interactions.extension_command(
-        name="unstable", description="Group for unstable commands"
+        name="unstable", description="Group for unstable commands", scope=scope
     )
     async def unstable(self, _ctx: CommandContext):
         pass
