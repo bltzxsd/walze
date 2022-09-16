@@ -1,13 +1,11 @@
 import asyncio
-import os
 import string
 
 import interactions
 from interactions import CommandContext
-from lib import misc
-from lib.misc import user_check
+from lib import constants, misc
 
-hq = os.getenv("HQ")
+scope = constants.config.owner.get("servers", [])
 
 
 class RollCommands(interactions.Extension):
@@ -38,7 +36,7 @@ class RollCommands(interactions.Extension):
         ],
     )
     async def custom(self, ctx: CommandContext, custom: str, implication: str = ""):
-        if await user_check(ctx):
+        if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         try:
@@ -61,7 +59,7 @@ class RollCommands(interactions.Extension):
     @interactions.extension_command(
         name="cast",
         description="Cast spells from your spellbook.",
-        scope=hq,
+        scope=scope,
         options=[
             interactions.Option(
                 name="spell",
@@ -73,7 +71,7 @@ class RollCommands(interactions.Extension):
         ],
     )
     async def cast(self, ctx: CommandContext, spell: str):
-        if await user_check(ctx):
+        if await misc.user_check(ctx):
             return
         content: dict = await misc.open_stats(ctx.author)
         spell = string.capwords(spell)
@@ -170,7 +168,7 @@ class RollCommands(interactions.Extension):
         description="Roll for initiative.",
     )
     async def initiative(self, ctx: interactions.CommandContext):
-        if await user_check(ctx):
+        if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         init = content.get(str(ctx.author.id)).get("initiative")
@@ -194,7 +192,9 @@ class RollCommands(interactions.Extension):
         embed = misc.roll_embed(
             ctx.author, rolls, sides, result, generated_values, mod=mod
         )
-        syntax_embed = misc.quick_embed("Initiative Syntax", f"{ctx.author.user.username}:{result}", "ok")
+        syntax_embed = misc.quick_embed(
+            "Initiative Syntax", f"{ctx.author.user.username}:{result}", "ok"
+        )
         syntax_embed.set_footer("Copy this for the `/sort` command!")
         await ctx.send(embeds=[embed, syntax_embed])
 
@@ -224,7 +224,7 @@ class RollCommands(interactions.Extension):
     async def skill(
         self, ctx: interactions.CommandContext, skill: str, implication: str = ""
     ):
-        if await user_check(ctx):
+        if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         try:
@@ -279,7 +279,7 @@ class RollCommands(interactions.Extension):
         atk: str,
         implication: str = "",
     ):
-        if await user_check(ctx):
+        if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         try:
