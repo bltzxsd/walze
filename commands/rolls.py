@@ -193,9 +193,9 @@ class RollCommands(interactions.Extension):
             ctx.author, rolls, sides, result, generated_values, mod=mod
         )
         syntax_embed = misc.quick_embed(
-            "Initiative Syntax", f"{ctx.author.user.username}:{result} ", "ok"
+            "Initiative Syntax", f"```{ctx.author.user.username}:{result} ```", "ok"
         )
-        syntax_embed.set_footer("Copy this for the `/sort` command!")
+        syntax_embed.set_footer("Copy this ⬆️ (including the space at the end) for the `/sort` command! ")
         await ctx.send(embeds=[embed, syntax_embed])
 
     @interactions.extension_command(
