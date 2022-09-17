@@ -73,8 +73,7 @@ class RollCommands(interactions.Extension):
     async def cast(self, ctx: CommandContext, spell: str):
         if await misc.user_check(ctx):
             return
-        content: dict = await misc.open_stats(ctx.author)
-        spell = string.capwords(spell)
+        content: dict = await misc.open_stats(ctx.author) 
         try:
             spellbook = content.get(str(ctx.author.id)).get("spells")
             spellname: dict = spellbook[spell]
