@@ -89,10 +89,15 @@ def roll_dice(
 
 
 def find_dice(string: str):
-    return sorted(
-        [*set(constants.dice_syntax.findall(string))],
-        key=lambda x: (int(x.split("d")[0])),
-    )
+    s = constants.dice_syntax.findall(string)
+    for rolls in s:
+        rolls = rolls.split("d")
+        if not rolls[0]:
+            rolls[0] == 1
+        else:
+            rolls[0] = int(rolls[0])
+
+    return sorted(s, key=lambda x: x[0])
 
 
 def decipher_dice(roll: str) -> tuple[int, int, int]:
