@@ -52,11 +52,15 @@ class BaseCommands(interactions.Extension):
     )
     async def sort(self, ctx: CommandContext, entities: str):
         entities = re.findall(constants.entities_syntax, entities)
-        entities: list = [entity.split(":") for entity in entities if entity]
+        entities: list = [entity.split(":") for entity in entities]
 
         for item in entities:
-            item[1] = int(item[1])
+            try:
+                item[1] = int(item[1])
+            except ValueError:
+                item[1] = None
 
+        entities = list(filter(lambda e: e[0] != "" and e[1] is not None, entities))
         entities.sort(key=operator.itemgetter(1), reverse=True)
 
         pretty_print = [[name, initiative] for name, initiative in entities]
