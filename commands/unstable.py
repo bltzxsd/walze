@@ -1,6 +1,7 @@
 import interactions
 import py_expression_eval
 import pyfiglet
+import logging
 from interactions import CommandContext
 from lib import constants, misc
 
@@ -44,6 +45,7 @@ class Unstable(interactions.Extension):
         try:
             expression = parser.parse(expr).evaluate({})
         except Exception as e:
+            expression = ""
             title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
             ephemeral = True
         else:
@@ -53,7 +55,8 @@ class Unstable(interactions.Extension):
             title, status = f"Evaluation: {dice_syntax}", "ok"
 
         embed = misc.quick_embed(title, desc, status)
-        embed.set_footer(f"{expr} = {expression}")
+        if expression:
+            embed.set_footer(f"{expr} = {expression}")
         await ctx.send(embeds=embed, ephemeral=ephemeral)
 
 
