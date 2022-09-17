@@ -88,7 +88,7 @@ class AutoComplete(interactions.Extension):
             return
 
         autocomplete = [
-            interactions.Choice(name=string.capwords(param), value=param)
+            interactions.Choice(name=param, value=param)
             for param in params.keys()
             if value.lower() in param.lower()
         ]
