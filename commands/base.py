@@ -33,10 +33,10 @@ class BaseCommands(interactions.Extension):
     @interactions.extension_command(name="kill", description="Kill bot.", scope=scope)
     async def kill(self, ctx: CommandContext):
         if int(ctx.author.id) == constants.config.owner.get("id", 0):
-            await ctx.send("Killing bot.", ephemeral=True)
-            await sys.exit(0)
+            await ctx.send(embeds=misc.quick_embed("Terminating", "Terminating bot.", "ok"), ephemeral=True)
+            raise KeyboardInterrupt
         else:
-            return await ctx.send("LMFAOOOOOO", ephemeral=True)
+            return await ctx.send(embeds=misc.quick_embed("Lacking privilege.", "Not a bot administrator.", "error"), ephemeral=True)
 
     @interactions.extension_command(
         name="sort",
