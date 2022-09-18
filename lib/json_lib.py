@@ -18,13 +18,13 @@ async def modify_param(
         skills = author.get("stats")
         weapon = author.get("weapons")
         custom = author.get("custom")
-        spells = author.get("spells")
+        # spells = author.get("spells")
         features = author.get("features")
     except KeyError:
         author["stats"] = {}
         author["weapons"] = {}
         author["custom"] = {}
-        author["spells"] = {}
+        # author["spells"] = {}
         author["features"] = {}
 
     match access:
@@ -36,8 +36,8 @@ async def modify_param(
             level = weapon
         case "custom":
             level = custom
-        case "spells":
-            level = spells
+        # case "spells":
+        #     level = spells
         case "features":
             level = features
         case _:

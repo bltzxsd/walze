@@ -1,8 +1,6 @@
 import string
 
 import interactions
-import requests
-from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
 from lib import json_lib, misc
 from lib.misc import user_check
@@ -206,46 +204,6 @@ class ModifyAttributes(interactions.Extension):
             return
         title, desc, outcome = await json_lib.write_stats(ctx.author, attributes)
         await ctx.send(embeds=misc.quick_embed(title, desc, outcome), ephemeral=True)
-
-    @save.subcommand(
-        name="spell",
-        description="Save a spell from the wiki.",
-        options=[
-            interactions.Option(
-                name="spell",
-                description="Name of the spell.",
-                type=interactions.OptionType.STRING,
-                required=True,
-            )
-        ],
-    )
-    async def spell(self, ctx: CommandContext, spell: str):
-        if await user_check(ctx):
-            return
-        spell_url = spell.lower().replace(" ", "-").replace("'", "")
-        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
-        page = requests.get(spell_url)
-        if page.status_code != 200:
-            return await ctx.send(
-                embeds=misc.quick_embed(
-                    "Failed to fetch spell",
-                    f"Please check if spell exists and try again. Status Code: {page.status_code}",
-                    "error",
-                ),
-                ephemeral=True,
-            )
-        soup = BeautifulSoup(
-            page.text, "html.parser", parse_only=SoupStrainer("div", "main-content")
-        )
-
-        name, spell_json = json_lib.spell_to_dict(soup.get_text())
-        title, _, color = await json_lib.modify_param(
-            ctx, access="spells", key=name, value=spell_json
-        )
-
-        spell_embed = misc.create_spell_embed_unstable(ctx, name, spell_json)
-        spell_embed.insert(0, misc.quick_embed(title, "Modified.", color))
-        await ctx.send(embeds=spell_embed, ephemeral=True)
 
 
 def setup(client):

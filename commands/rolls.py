@@ -2,10 +2,12 @@ import asyncio
 import string
 
 import interactions
+import requests
+from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
-from lib import constants, misc
+from lib import constants, json_lib, misc
 
-scope = constants.config.owner.get("servers", [])
+scope = constants.CONFIG.owner.get("servers", [])
 
 
 class RollCommands(interactions.Extension):
@@ -71,23 +73,43 @@ class RollCommands(interactions.Extension):
         ],
     )
     async def cast(self, ctx: CommandContext, spell: str):
+        # if await misc.user_check(ctx):
+        #     return
+        # content: dict = await misc.open_stats(ctx.author)
+        # try:
+        #     spellbook = content.get(str(ctx.author.id)).get("spells")
+        #     spellname: dict = spellbook[spell]
+        # except KeyError:
+        #     return await ctx.send(
+        #         embeds=misc.quick_embed("Error", "No such spell available!", "error"),
+        #         ephemeral=True,
+        #     )
         if await misc.user_check(ctx):
             return
-        content: dict = await misc.open_stats(ctx.author) 
-        try:
-            spellbook = content.get(str(ctx.author.id)).get("spells")
-            spellname: dict = spellbook[spell]
-        except KeyError:
+
+        spell_url = spell.lower().replace(" ", "-").replace("'", "")
+        spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
+        page = requests.get(spell_url)
+        if page.status_code != 200:
             return await ctx.send(
-                embeds=misc.quick_embed("Error", "No such spell available!", "error"),
+                embeds=misc.quick_embed(
+                    "Failed to fetch spell",
+                    "Please check if spell exists and try again. Status Code:"
+                    + page.status_code,
+                    "error",
+                ),
                 ephemeral=True,
             )
+        soup = BeautifulSoup(
+            page.text, "html.parser", parse_only=SoupStrainer("div", "main-content")
+        )
+        spellname, spell_attrs = json_lib.spell_to_dict(soup.get_text())
 
-        embed = misc.create_spell_embed_unstable(ctx, spell, spellname)
+        embed = misc.create_spell_embed_unstable(ctx, spellname, spell_attrs)
 
-        dice = spellname.get("Description")
-        dice: str = dice + spellname.get("At Higher Levels")
-        dice_syns = misc.find_dice(dice)
+        dice = spell_attrs.get("Description")
+        dice: str = dice + spell_attrs.get("At Higher Levels")
+        dice_syns = [*set(misc.find_dice(dice))]  # remove dupes
 
         def to_button(button):
             return interactions.Button(
@@ -194,7 +216,9 @@ class RollCommands(interactions.Extension):
         syntax_embed = misc.quick_embed(
             "Initiative Syntax", f"```{ctx.author.user.username}:{result} ```", "ok"
         )
-        syntax_embed.set_footer("Copy this ⬆️ (including the space at the end) for the `/sort` command! ")
+        syntax_embed.set_footer(
+            "Copy this ⬆️ (including the space at the end) for the `/sort` command! "
+        )
         await ctx.send(embeds=[embed, syntax_embed])
 
     @interactions.extension_command(
