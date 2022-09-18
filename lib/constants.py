@@ -1,18 +1,22 @@
 import re
+from operator import itemgetter
 from pathlib import Path
+
+import requests
+from bs4 import BeautifulSoup, SoupStrainer
 
 from lib import config
 
 # config
-config = config.Config()
+CONFIG = config.Config()
 
 # base
-entities_syntax = re.compile(r"[a-zA-Z0-9]+\d*:\d+")
+ENTITIES_SYNTAX = re.compile(r"[a-zA-Z0-9]+\d*:\d+")
 
 # misc
-dice_syntax = re.compile(r"\d*?\d*d\d+[-+]?\d*")
-sanitize_dice = re.compile(r"[^\d+\-*\/d]")
-eval_string_str = re.compile(r"(\d+d\d+)")
+DICE_SYNTAX = re.compile(r"\d*?\d*d\d+[-+]?\d*")
+SANITIZE_DICE = re.compile(r"[^\d+\-*\/d]")
+EVAL_STRING_STR = re.compile(r"(\d+d\d+)")
 
 
 class CharacterSheets:
@@ -34,4 +38,24 @@ class CharacterSheets:
         return curr
 
 
-sheets = CharacterSheets("stats.json")
+SHEETS = CharacterSheets("stats.json")
+
+# autocomplete
+def generate_spells() -> list:
+    spells_url = "https://dnd5e.wikidot.com/spells"
+    page = requests.get(spells_url)
+    if page.status_code != 200:
+        return
+
+    soup = BeautifulSoup(page.text, "html.parser", parse_only=SoupStrainer("a"))
+    # all spells except Homebrew and Unearthed Arcana
+    spells = [
+        (a.contents[0], a.get("href").split(":")[1])
+        for a in soup.find_all("a", href=True)[49:-38]
+        if not any(spell in a.contents[0] for spell in ["HB", "UA"])
+    ]
+    spells.sort(key=itemgetter(1))
+    return spells
+
+
+SPELL_LIST = generate_spells()

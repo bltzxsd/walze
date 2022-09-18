@@ -10,7 +10,7 @@ import tabulate
 from interactions import CommandContext
 from lib import constants, misc
 
-scope = constants.config.owner.get("servers", [])
+scope = constants.CONFIG.owner.get("servers", [])
 
 
 class BaseCommands(interactions.Extension):
@@ -32,11 +32,19 @@ class BaseCommands(interactions.Extension):
 
     @interactions.extension_command(name="kill", description="Kill bot.", scope=scope)
     async def kill(self, ctx: CommandContext):
-        if int(ctx.author.id) == constants.config.owner.get("id", 0):
-            await ctx.send(embeds=misc.quick_embed("Terminating", "Terminating bot.", "ok"), ephemeral=True)
+        if int(ctx.author.id) == constants.CONFIG.owner.get("id", 0):
+            await ctx.send(
+                embeds=misc.quick_embed("Terminating", "Terminating bot.", "ok"),
+                ephemeral=True,
+            )
             raise KeyboardInterrupt
         else:
-            return await ctx.send(embeds=misc.quick_embed("Lacking privilege.", "Not a bot administrator.", "error"), ephemeral=True)
+            return await ctx.send(
+                embeds=misc.quick_embed(
+                    "Lacking privilege.", "Not a bot administrator.", "error"
+                ),
+                ephemeral=True,
+            )
 
     @interactions.extension_command(
         name="sort",
@@ -51,7 +59,7 @@ class BaseCommands(interactions.Extension):
         ],
     )
     async def sort(self, ctx: CommandContext, entities: str):
-        entities = re.findall(constants.entities_syntax, entities)
+        entities = re.findall(constants.ENTITIES_SYNTAX, entities)
         entities: list = [entity.split(":") for entity in entities]
 
         for item in entities:

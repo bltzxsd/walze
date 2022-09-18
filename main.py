@@ -9,8 +9,8 @@ from lib import constants, misc
 from lib.misc import quick_embed
 
 synced: bool = False
-discord_token = constants.config.tokens.get("discord", "")
-constants.config.set_logs()
+discord_token = constants.CONFIG.tokens.get("discord", "")
+constants.CONFIG.set_logs()
 
 bot = interactions.Client(token=discord_token, intents=interactions.Intents.DEFAULT)
 

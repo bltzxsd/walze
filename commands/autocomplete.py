@@ -1,8 +1,6 @@
-import string
-
 import interactions
 from interactions import CommandContext
-from lib import misc
+from lib import constants, misc
 
 
 class AutoComplete(interactions.Extension):
@@ -42,20 +40,12 @@ class AutoComplete(interactions.Extension):
         await ctx.populate(autocomplete)
 
     @interactions.extension_autocomplete("cast", "spell")
-    # @interactions.extension_autocomplete("save", "spell")
     async def cast_autocomplete(self, ctx: CommandContext, value: str = ""):
-        content = await misc.open_stats(ctx.author)
-        try:
-            spells = content.get(str(ctx.author.id)).get("spells")
-            spells = spells.keys()
-        except KeyError:
-            return
-
         autocomplete = [
-            misc.create_choice(spell)
-            for spell in spells
-            if value.lower() in spell.lower()
-        ]
+            misc.create_choice(spellname, url)
+            for spellname, url in constants.SPELL_LIST
+            if spellname.lower().startswith(value.lower())
+        ][:25]
         await ctx.populate(autocomplete)
 
     @interactions.extension_autocomplete("custom", "custom")

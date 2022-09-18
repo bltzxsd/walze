@@ -39,7 +39,6 @@ class CharRepr:
                 "name": author.user.username,
                 "stats": {},
                 "weapons": {},
-                "spells": {},
                 "custom": {},
                 "features": {},
                 "initiative": "",
@@ -89,7 +88,7 @@ def roll_dice(
 
 
 def find_dice(string: str):
-    s = constants.dice_syntax.findall(string)
+    s = constants.DICE_SYNTAX.findall(string)
     for rolls in s:
         rolls = rolls.split("d")
         if not rolls[0]:
@@ -101,7 +100,7 @@ def find_dice(string: str):
 
 
 def decipher_dice(roll: str) -> tuple[int, int, int]:
-    if not constants.dice_syntax.match(roll):
+    if not constants.DICE_SYNTAX.match(roll):
         raise ValueError(f"Invalid Syntax for roll: {roll}")
 
     rolls = 0
@@ -130,7 +129,7 @@ def decipher_dice(roll: str) -> tuple[int, int, int]:
 async def open_stats(author: Member):
     char = CharRepr(author)
     try:
-        content = constants.sheets.read()
+        content = constants.SHEETS.read()
         content: dict = json.loads(content)
     except json.JSONDecodeError:
         content: dict = json.loads("{}")
@@ -356,7 +355,7 @@ def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dic
 
 
 async def user_check(ctx):
-    barred = constants.config.barred_users()
+    barred = constants.CONFIG.barred_users()
     if int(ctx.author.id) in barred or int(ctx.user.id) in barred:
         await ctx.send(
             embeds=quick_embed("Nah", "I'm not playing. Use your sheet.", "error"),
@@ -372,8 +371,8 @@ def parse_compound_dice(dice_syntax):
         a, b = int(a), int(b)
         return str(random.randint(a, a * b))
 
-    sanitize_dice = lambda s: re.sub(constants.sanitize_dice, "", s)
+    sanitize_dice = lambda s: re.sub(constants.SANITIZE_DICE, "", s)
 
     dice_syntax = sanitize_dice(dice_syntax)
-    eval_string = re.sub(constants.eval_string_str, __dice, dice_syntax)
+    eval_string = re.sub(constants.EVAL_STRING_STR, __dice, dice_syntax)
     return eval_string

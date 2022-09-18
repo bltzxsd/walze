@@ -1,11 +1,10 @@
 import interactions
 import py_expression_eval
 import pyfiglet
-import logging
 from interactions import CommandContext
 from lib import constants, misc
 
-scope = constants.config.owner.get("servers", [])
+scope = constants.CONFIG.owner.get("servers", [])
 
 
 class Unstable(interactions.Extension):
