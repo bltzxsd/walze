@@ -72,6 +72,7 @@ async def evaluate(
         title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
         ephemeral = True
     else:
+        expression = ""
         figlet = pyfiglet.figlet_format(str(expression), "fraktur")
         figlet = figlet.replace("`", "\u200B`")
         desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
