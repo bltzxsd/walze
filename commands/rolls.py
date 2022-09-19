@@ -5,9 +5,7 @@ import interactions
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
-from lib import constants, json_lib, misc
-
-scope = constants.CONFIG.owner.get("servers", [])
+from lib import json_lib, misc
 
 
 class RollCommands(interactions.Extension):
@@ -61,7 +59,6 @@ class RollCommands(interactions.Extension):
     @interactions.extension_command(
         name="cast",
         description="Cast spells from your spellbook.",
-        scope=scope,
         options=[
             interactions.Option(
                 name="spell",
