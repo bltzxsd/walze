@@ -4,7 +4,7 @@ import interactions
 import pyfiglet
 from interactions.ext import wait_for
 from py_expression_eval import Parser
-
+import re
 from lib import constants, misc
 from lib.misc import quick_embed
 
@@ -71,12 +71,12 @@ async def evaluate(
     except Exception as e:
         title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
         ephemeral = True
-    else:
         expression = ""
-        figlet = pyfiglet.figlet_format(str(expression), "fraktur")
-        figlet = figlet.replace("`", "\u200B`")
-        desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
-        title, status = f"Evaluation: {expr}", "ok"
+
+    figlet = pyfiglet.figlet_format(str(expression), "fraktur")
+    figlet = figlet.replace("`", "\u200B`")
+    desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
+    title, status = f"Evaluation: {expr}", "ok"
 
     embed = quick_embed(title, desc, status)
     embed.set_footer(f"{expression}")
