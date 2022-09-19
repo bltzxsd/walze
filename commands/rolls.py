@@ -73,17 +73,6 @@ class RollCommands(interactions.Extension):
         ],
     )
     async def cast(self, ctx: CommandContext, spell: str):
-        # if await misc.user_check(ctx):
-        #     return
-        # content: dict = await misc.open_stats(ctx.author)
-        # try:
-        #     spellbook = content.get(str(ctx.author.id)).get("spells")
-        #     spellname: dict = spellbook[spell]
-        # except KeyError:
-        #     return await ctx.send(
-        #         embeds=misc.quick_embed("Error", "No such spell available!", "error"),
-        #         ephemeral=True,
-        #     )
         if await misc.user_check(ctx):
             return
 
