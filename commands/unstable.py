@@ -58,6 +58,73 @@ class Unstable(interactions.Extension):
             embed.set_footer(f"{expr} = {expression}")
         await ctx.send(embeds=embed, ephemeral=ephemeral)
 
+    @unstable.subcommand(
+        name="chance",
+        description="Quick dice chance calculations",
+        options=[
+            interactions.Option(
+                name="target",
+                description="Target to hit",
+                type=interactions.OptionType.INTEGER,
+                required=True,
+            ),
+            interactions.Option(
+                name="bonus",
+                description="bonuses on the number",
+                type=interactions.OptionType.INTEGER,
+                required=False,
+            ),
+            interactions.Option(
+                name="implication",
+                description="Choose if the roll should have an advantage or disadvantage.",
+                type=interactions.OptionType.STRING,
+                choices=[
+                    interactions.Choice(name="Advantage", value="adv"),
+                    interactions.Choice(name="Disadvantage", value="dis"),
+                    interactions.Choice(name="Elven Accuracy", value="ea"),
+                ],
+                required=False,
+            ),
+            interactions.Option(
+                name="ephemeral",
+                description="Whether the result should only be visible to the user.",
+                type=interactions.OptionType.BOOLEAN,
+                required=False,
+            ),
+        ],
+    )
+    async def chance(
+        self,
+        ctx: CommandContext,
+        target: int,
+        bonus: int = 0,
+        implication: str = "",
+        ephemeral: bool = True,
+    ):
+        match implication:
+            case "":
+                chance_decimal = ((21 + bonus - target) / 20) * 100
+            case "adv":
+                chance_decimal = (1 - (((target - bonus - 1) ** 2) / 400)) * 100
+            case "dis":
+                chance_decimal = ((21 + bonus - target) ** 2 / 400) * 100
+            case "ea":
+                chance_decimal = (1 - ((target - bonus - 1) ** 3) / 8000) * 100
+            case _:
+                chance_decimal = 0.0
+        likelihood = "Likely to hit." if chance_decimal > 50 else "Unlikely to hit."
+        chance_decimal = str(round(chance_decimal, 2)) + "%"
+        author_url = misc.author_url(ctx.author, ctx.guild_id)
+        embed = interactions.Embed(
+            title=f"Chance to hit {target}",
+            description="**" + chance_decimal + "**",
+            color=0xE2E0DD,
+        )
+        embed.set_author(ctx.author.user.username, icon_url=author_url)
+        # embed.add_field(name="\u200B", value=f"**{chance_decimal}**")
+        embed.set_footer(likelihood)
+        await ctx.send(embeds=embed, ephemeral=ephemeral)
+
 
 def setup(client):
     Unstable(client)
