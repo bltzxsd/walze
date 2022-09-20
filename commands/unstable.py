@@ -119,7 +119,7 @@ class Unstable(interactions.Extension):
         elif chance_decimal == 0:
             likelihood = "Impossible to hit."
         else:
-            likelihood = "Unlikely to hit to exceed."
+            likelihood = "Unlikely to hit or exceed."
 
         chance_decimal = str(round(chance_decimal, 2)) + "%"
         author_url = misc.author_url(ctx.author, ctx.guild_id)
