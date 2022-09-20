@@ -144,7 +144,7 @@ class RollCommands(interactions.Extension):
         try:
             button_ctx: interactions.ComponentContext = (
                 await self.client.wait_for_component(
-                    components=rows, check=check, timeout=10
+                    components=rows, check=check, timeout=30
                 )
             )
             performed = button_ctx.data.custom_id
