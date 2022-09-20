@@ -110,9 +110,17 @@ class Unstable(interactions.Extension):
                 chance_decimal = ((21 + bonus - target) ** 2 / 400) * 100
             case "ea":
                 chance_decimal = (1 - ((target - bonus - 1) ** 3) / 8000) * 100
-            case _:
-                chance_decimal = 0.0
-        likelihood = "Likely to hit." if chance_decimal > 50 else "Unlikely to hit."
+
+        if chance_decimal < 0:
+            chance_decimal = 0.0
+
+        if chance_decimal > 66:
+            likelihood = "Likely to hit or exceed."
+        elif chance_decimal == 0:
+            likelihood = "Impossible to hit."
+        else:
+            likelihood = "Unlikely to hit to exceed."
+
         chance_decimal = str(round(chance_decimal, 2)) + "%"
         author_url = misc.author_url(ctx.author, ctx.guild_id)
         embed = interactions.Embed(
