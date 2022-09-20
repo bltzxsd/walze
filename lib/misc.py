@@ -299,21 +299,21 @@ def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dic
 
     match school:
         case "abjuration":
-            spell_icon = "https://imgur.com/H8cB8mv"
+            spell_icon = "https://imgur.com/H8cB8mv.png"
         case "conjuration":
-            spell_icon = "https://imgur.com/jjtwfqF"
+            spell_icon = "https://imgur.com/jjtwfqF.png"
         case "divination":
-            spell_icon = "https://imgur.com/6kQkFHa"
+            spell_icon = "https://imgur.com/6kQkFHa.png"
         case "enchantment":
-            spell_icon = "https://imgur.com/rfeTLTh"
+            spell_icon = "https://imgur.com/rfeTLTh.png"
         case "evocation":
-            spell_icon = "https://imgur.com/pTpQUGV"
+            spell_icon = "https://imgur.com/pTpQUGV.png"
         case "illusion":
-            spell_icon = "https://imgur.com/uEWl5eS"
+            spell_icon = "https://imgur.com/uEWl5eS.png"
         case "necromancy":
-            spell_icon = "https://imgur.com/Aw5eUkK"
+            spell_icon = "https://imgur.com/Aw5eUkK.png"
         case "transmutation":
-            spell_icon = "https://imgur.com/r7ucT57"
+            spell_icon = "https://imgur.com/r7ucT57.png"
         case _:
             spell_icon = ""
 
