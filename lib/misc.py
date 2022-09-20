@@ -5,8 +5,7 @@ import re
 import aiofiles
 import interactions
 import pyfiglet
-import requests
-from interactions import CommandContext, Embed, EmbedImageStruct, Member
+from interactions import CommandContext, Embed, EmbedImageStruct, Member, User
 
 from lib import constants
 
@@ -224,14 +223,17 @@ class Choices:
         return [create_choice(choice) for choice in lst]
 
 
-def author_url(author: Member, guild_id: interactions.Snowflake):
-    icon = author.get_avatar_url(guild_id)
-    if requests.get(icon).status_code == 404:
-        try:
-            base_url = "https://cdn.discordapp.com/avatars"
-            icon = f"{base_url}/{author.id}/{author.avatar}.webp"
-        except Exception:
-            icon = ""
+def author_url(author: Member | User, guild_id: interactions.Snowflake):
+    # if isinstance(author, Member):
+    #     icon = author.get_avatar_url(guild_id)
+    # else:
+    #     icon = author.avatar
+    # if requests.get(icon).status_code == 404:
+    try:
+        base_url = "https://cdn.discordapp.com/avatars"
+        icon = f"{base_url}/{author.id}/{author.avatar}.webp"
+    except Exception:
+        icon = ""
 
     return icon
 
@@ -297,21 +299,21 @@ def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dic
 
     match school:
         case "abjuration":
-            spell_icon = "https://i.stack.imgur.com/uzFcs.png"
+            spell_icon = "https://imgur.com/H8cB8mv"
         case "conjuration":
-            spell_icon = "https://i.stack.imgur.com/8DWrI.png"
+            spell_icon = "https://imgur.com/jjtwfqF"
         case "divination":
-            spell_icon = "https://i.stack.imgur.com/VfeKS.png"
+            spell_icon = "https://imgur.com/6kQkFHa"
         case "enchantment":
-            spell_icon = "https://i.stack.imgur.com/0YuqE.png"
+            spell_icon = "https://imgur.com/rfeTLTh"
         case "evocation":
-            spell_icon = "https://i.stack.imgur.com/lwSxi.png"
+            spell_icon = "https://imgur.com/pTpQUGV"
         case "illusion":
-            spell_icon = "https://i.stack.imgur.com/bHkjS.png"
+            spell_icon = "https://imgur.com/uEWl5eS"
         case "necromancy":
-            spell_icon = "https://i.stack.imgur.com/b9tgW.png"
+            spell_icon = "https://imgur.com/Aw5eUkK"
         case "transmutation":
-            spell_icon = "https://i.stack.imgur.com/wPeGf.png"
+            spell_icon = "https://imgur.com/r7ucT57"
         case _:
             spell_icon = ""
 
