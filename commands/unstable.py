@@ -107,7 +107,7 @@ class Unstable(interactions.Extension):
                 embed_image = "https://imgur.com/0waYikK.png"
             case "adv":
                 chance_decimal = (1 - (((target - bonus - 1) ** 2) / 400)) * 100
-                embed_image = "https://imgur.com/KXe5dJQ.png"
+                embed_image = "https://imgur.com/n3zqzJI.png"
                 implication = "*Advantage*"
             case "dis":
                 chance_decimal = ((21 + bonus - target) ** 2 / 400) * 100
