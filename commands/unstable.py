@@ -104,12 +104,19 @@ class Unstable(interactions.Extension):
         match implication:
             case "":
                 chance_decimal = ((21 + bonus - target) / 20) * 100
+                embed_image = "https://imgur.com/0waYikK.png"
             case "adv":
                 chance_decimal = (1 - (((target - bonus - 1) ** 2) / 400)) * 100
+                embed_image = "https://imgur.com/KXe5dJQ.png"
+                implication = "*Advantage*"
             case "dis":
                 chance_decimal = ((21 + bonus - target) ** 2 / 400) * 100
+                embed_image = "https://imgur.com/L5M3KnW.png"
+                implication = "*Disadvantage*"
             case "ea":
                 chance_decimal = (1 - ((target - bonus - 1) ** 3) / 8000) * 100
+                embed_image = "https://imgur.com/O6DbU4w.png"
+                implication = "*Elven Accuracy*"
 
         if chance_decimal < 0:
             chance_decimal = 0.0
@@ -124,10 +131,14 @@ class Unstable(interactions.Extension):
         chance_decimal = str(round(chance_decimal, 2)) + "%"
         author_url = misc.author_url(ctx.author, ctx.guild_id)
         embed = interactions.Embed(
-            title=f"Chance to hit {target}",
+            title=f"Probability to exceed {target}",
             description="**" + chance_decimal + "**",
             color=0xE2E0DD,
+            image=interactions.EmbedImageStruct(url=embed_image),
         )
+        embed.add_field(name="Bonus", value=bonus, inline=True)
+        if implication:
+            embed.add_field(name="Implication", value=implication, inline=True)
         embed.set_author(ctx.author.user.username, icon_url=author_url)
         # embed.add_field(name="\u200B", value=f"**{chance_decimal}**")
         embed.set_footer(likelihood)
