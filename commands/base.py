@@ -3,7 +3,6 @@ import json
 import logging
 import operator
 import re
-import sys
 
 import interactions
 import tabulate
