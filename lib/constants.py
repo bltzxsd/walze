@@ -14,7 +14,8 @@ CONFIG = config.Config()
 ENTITIES_SYNTAX = re.compile(r"[a-zA-Z0-9]+\d*:\d+")
 
 # misc
-DICE_SYNTAX = re.compile(r"\d*?\d*d\d+[-+]?\d*")
+# DICE_SYNTAX = re.compile(r"\d*?\d*d\d+[-+]?\d*")
+DICE_SYNTAX = re.compile(r"\d*?\d*d\d+\s?[-+]?\s?\d*")
 SANITIZE_DICE = re.compile(r"[^\d+\-*\/d]")
 EVAL_STRING_STR = re.compile(r"(\d+d\d+)")
 
