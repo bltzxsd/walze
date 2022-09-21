@@ -1,7 +1,7 @@
 import interactions
 import pyfiglet
 import rolldice
-from interactions import CommandContext
+from interactions import CommandContext, User, Member
 from lib import constants, misc
 
 scope = constants.CONFIG.owner.get("servers", [])
@@ -43,7 +43,7 @@ class Unstable(interactions.Extension):
             explanation = explanation.replace(",", ", ")
         except (rolldice.DiceGroupException, rolldice.DiceOperatorException) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed(f"Exception Occured", str(exc), "error"),
+                embeds=misc.quick_embed(f"Error", str(exc), "error"),
                 ephemeral=True,
             )
 
@@ -91,7 +91,7 @@ class Unstable(interactions.Extension):
             ),
         ],
     )
-    async def chance(
+    async def unstable_chance(
         self,
         ctx: CommandContext,
         target: int,
@@ -138,9 +138,134 @@ class Unstable(interactions.Extension):
         if implication:
             embed.add_field(name="Implication", value=implication, inline=True)
         embed.set_author(ctx.author.user.username, icon_url=author_url)
-        # embed.add_field(name="\u200B", value=f"**{chance_decimal}**")
         embed.set_footer(likelihood)
         await ctx.send(embeds=embed, ephemeral=ephemeral)
+
+    @unstable.subcommand(
+        name="roll",
+        description="Roll dice.",
+        options=[
+            interactions.Option(
+                name="rolls",
+                description="Number of times to roll the dice. Eg: `1`, `2`, `3`",
+                type=interactions.OptionType.INTEGER,
+                required=True,
+            ),
+            interactions.Option(
+                name="sides",
+                description="Number of sides the dice should have. Eg: `4`, `6`, `8`, `10`, `20`",
+                type=interactions.OptionType.INTEGER,
+                required=True,
+            ),
+            interactions.Option(
+                name="mod",
+                description="Add or subtract modifiers from the dice roll. Eg: `1` or `-2`",
+                type=interactions.OptionType.INTEGER,
+                required=False,
+            ),
+            interactions.Option(
+                name="implication",
+                description="Choose if the roll should have an advantage or disadvantage.",
+                type=interactions.OptionType.STRING,
+                choices=[
+                    interactions.Choice(name="Advantage", value="K"),
+                    interactions.Choice(name="Disadvantage", value="k"),
+                ],
+                required=False,
+            ),
+            interactions.Option(
+                name="extension",
+                description="Any additional dice to add or subtract. Eg: `1d4+2d6+4`",
+                type=interactions.OptionType.STRING,
+                required=False,
+            ),
+            interactions.Option(
+                name="ephemeral",
+                description="Whether the result should only be visible to the user.",
+                type=interactions.OptionType.BOOLEAN,
+                required=False,
+            ),
+        ],
+    )
+    async def unstable_roll(
+        self,
+        ctx,
+        rolls: int,
+        sides: int,
+        mod: int = 0,
+        implication: str = "",
+        extension: str = "",
+        ephemeral: bool = False,
+    ):
+        if rolls <= 0:
+            return await ctx.send(
+                embed=misc.quick_embed(
+                    "Error", "Rolls can't be negative or zero!", "error"
+                )
+            )
+        elif sides < 1:
+            return await ctx.send(
+                embed=misc.quick_embed(
+                    "Error", "A dice can't have less than 1 sides", "error"
+                )
+            )
+
+        dice_expr = str(rolls) + "d" + str(sides)
+        if implication:
+            dice_expr += str(implication)
+            if dice_expr[0] == "1":
+                dice_expr = "2" + dice_expr[1:]
+        if mod != 0:
+            mod: str = str(mod)
+            dice_expr += mod if mod[0] == "-" else f"+{mod}"
+        if extension:
+            match extension[0]:
+                case "-" | "*" | "/":
+                    pass
+                case _:
+                    opr = "+"
+            dice_expr += opr + extension
+
+        try:
+            result, explanation = rolldice.roll_dice(dice_expr)
+        except (rolldice.DiceGroupException, rolldice.DiceOperatorException) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed("Error", str(exc), "error"), ephemeral=True
+            )
+
+        display_expr = dice_expr
+        if implication:
+            display_expr = "1" + dice_expr[1:]
+
+        embed = unstable_roll_embed(
+            ctx.author, display_expr, result, explanation, implication
+        )
+        await ctx.send(embeds=embed, ephemeral=ephemeral)
+
+
+def unstable_roll_embed(
+    author: User | Member, dice_expr: str, result, explanation: str, implication: str
+):
+    author_icon = misc.author_url(author)
+    title = dice_expr.replace("k", "").replace("K", "")
+    embed = interactions.Embed(title=title, color=0xE2E0DD)
+    name = author.user.username if isinstance(author, Member) else author.username
+    embed.set_author(name=name, icon_url=author_icon)
+
+    match implication:
+        case "k":
+            embed.add_field("Implication", "*Rolling with Disadvantage*")
+        case "K":
+            embed.add_field("Implication", "*Rolling with Advantage*")
+        case _:
+            pass
+
+    embed.add_field("Products", explanation)
+    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace("`", "\u200b`")
+    result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
+    embed.add_field("Result", result_field, inline=False)
+    embed.set_footer(f"{result}")
+    return embed
 
 
 def setup(client):
