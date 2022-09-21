@@ -269,15 +269,14 @@ class RollCommands(interactions.Extension):
                 required=True,
             ),
             interactions.Option(
-                name="atk",
-                description="Implication type for the weapon.",
+                name="implication",
+                description="implication for the roll",
                 type=interactions.OptionType.STRING,
                 choices=[
-                    interactions.Choice(name="Hit", value="hit"),
-                    interactions.Choice(name="Damage", value="dmg"),
-                    interactions.Choice(name="Attribute", value="attr"),
+                    interactions.Choice(name="Advantage", value="adv"),
+                    interactions.Choice(name="Disadvantage", value="dis"),
                 ],
-                required=True,
+                required=False,
             ),
         ],
     )
@@ -285,7 +284,6 @@ class RollCommands(interactions.Extension):
         self,
         ctx: interactions.CommandContext,
         weapon: str,
-        atk: str,
         implication: str = "",
     ):
         if await misc.user_check(ctx):
@@ -293,33 +291,70 @@ class RollCommands(interactions.Extension):
         content = await misc.open_stats(ctx.author)
         try:
             weapons = content.get(str(ctx.author.id)).get("weapons")
+            weapon_str = weapon
             weapon = weapons.get(string.capwords(weapon))
         except KeyError:
             return await ctx.send(
                 embeds=misc.quick_embed("Error", "No such weapon available!", "error"),
                 ephemeral=True,
             )
-        match atk:
-            case "hit":
-                weapon = weapon["hit"]
-            case "dmg":
-                weapon = weapon["dmg"]
-            case "attr":
-                weapon = weapon["attribute"]
-                if not weapon:
-                    return await ctx.send(
-                        embeds=misc.quick_embed(
-                            "Error", "Weapon does not have an attribute!", "error"
-                        ),
-                        ephemeral=True,
-                    )
 
-        rolls, sides, mod = misc.decipher_dice(weapon)
-        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
-        embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, implication, mod
-        )
-        await ctx.send(embeds=embed)
+        def to_button(button, id=""):
+            if not id:
+                id = button
+            return interactions.Button(
+                style=interactions.ButtonStyle.SECONDARY, label=button, custom_id=id
+            )
+
+        hit = weapon.get("hit")
+        dmg = weapon.get("dmg")
+        att = weapon.get("attribute", "")
+        initial_embed = misc.quick_embed(weapon_str, "", "ok")
+        initial_embed.add_field("Hit", hit)
+        initial_embed.add_field("Damage", dmg)
+        attacks = [("Attack", hit), ("Damage", dmg)]
+        if att:
+            attacks.append(("Attribute", att))
+            initial_embed.add_field("Attribute", att)
+
+        buttons = [to_button(name, dice) for name, dice in attacks]
+
+        await ctx.send(embeds=initial_embed, components=buttons)
+
+        async def auth_check(button_ctx: interactions.ComponentContext):
+            if int(button_ctx.author.id) == int(ctx.author.id):
+                return True
+            error_embed = misc.quick_embed(
+                "Error", "Not allowed to interact with this button.", "error"
+            )
+            error_embed.set_author(
+                button_ctx.author.name,
+                icon_url=misc.author_url(button_ctx.author),
+            )
+            await button_ctx.send(embeds=error_embed, ephemeral=True)
+            return False
+
+        try:
+            button_ctx: interactions.ComponentContext = (
+                await self.client.wait_for_component(
+                    components=buttons, check=auth_check, timeout=45
+                )
+            )
+            selected = button_ctx.data.custom_id
+            rolls, sides, mod = misc.decipher_dice(selected)
+
+            result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
+            roll_embed = misc.roll_embed(
+                ctx.author, rolls, sides, result, generated_values, implication, mod
+            )
+            for button in buttons:
+                button.disabled = True
+            await ctx.edit(components=buttons)
+            await button_ctx.send(embeds=roll_embed)
+        except asyncio.TimeoutError:
+            for button in buttons:
+                button.disabled = True
+            return await ctx.edit(components=buttons)
 
 
 def setup(client):
