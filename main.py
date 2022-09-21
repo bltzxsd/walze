@@ -1,10 +1,8 @@
 import logging
 
 import interactions
-import pyfiglet
 from interactions.ext import wait_for
-from py_expression_eval import Parser
-import re
+
 from lib import constants, misc
 from lib.misc import quick_embed
 
@@ -42,45 +40,6 @@ async def on_command(ctx: interactions.CommandContext):
 #         ),
 #         ephemeral=True,
 #     )
-
-
-@bot.command(
-    name="eval",
-    description="Evaluate mathematical expressions quickly.",
-    options=[
-        interactions.Option(
-            name="expr",
-            description="Expression to be calculated. Eg: `1 + 1 * 1 - 1 ^ 1 / 1`",
-            type=interactions.OptionType.STRING,
-            required=True,
-        ),
-        interactions.Option(
-            name="ephemeral",
-            description="Whether the result should only be visible to the user.",
-            type=interactions.OptionType.BOOLEAN,
-            required=False,
-        ),
-    ],
-)
-async def evaluate(
-    ctx: interactions.CommandContext, expr: str, ephemeral: bool = False
-):
-    parser = Parser()
-    try:
-        expression = parser.parse(expr).evaluate({})
-    except Exception as e:
-        title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
-        ephemeral = True
-        expression = ""
-
-    figlet = pyfiglet.figlet_format(str(expression), "fraktur")
-    figlet = figlet.replace("`", "\u200B`")
-    desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
-    title, status = f"Evaluation: {expr}", "ok"
-
-    embed = quick_embed(title, desc, status)
-    embed.set_footer(f"{expression}")
-    await ctx.send(embeds=embed, ephemeral=ephemeral)
 
 
 @bot.command(
