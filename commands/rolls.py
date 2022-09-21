@@ -91,7 +91,7 @@ class RollCommands(interactions.Extension):
         )
         spellname, spell_attrs = json_lib.spell_to_dict(soup.get_text())
 
-        embed = misc.create_spell_embed_unstable(ctx, spellname, spell_attrs)
+        embed = misc.spell_embed(ctx, spellname, spell_attrs)
 
         dice = spell_attrs.get("Description")
         dice: str = dice + spell_attrs.get("At Higher Levels")
@@ -131,7 +131,7 @@ class RollCommands(interactions.Extension):
                 )
                 error_embed.set_author(
                     button_ctx.author.name,
-                    icon_url=misc.author_url(button_ctx.author, ctx.guild_id),
+                    icon_url=misc.author_url(button_ctx.author),
                 )
                 await button_ctx.send(embeds=error_embed, ephemeral=True)
                 return False

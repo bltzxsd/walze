@@ -89,6 +89,7 @@ def roll_dice(
 def find_dice(string: str):
     s = constants.DICE_SYNTAX.findall(string)
     for rolls in s:
+        rolls.replace(" ", "")
         rolls = rolls.split("d")
         if not rolls[0]:
             rolls[0] == 1
@@ -223,7 +224,7 @@ class Choices:
         return [create_choice(choice) for choice in lst]
 
 
-def author_url(author: Member | User, guild_id: interactions.Snowflake):
+def author_url(author: Member | User):
     # if isinstance(author, Member):
     #     icon = author.get_avatar_url(guild_id)
     # else:
@@ -283,7 +284,7 @@ def wrap_spell(source_text, separator_chars=["."], width=1024, keep_separators=T
     return output
 
 
-def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dict):
+def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
     level_school = spell_json.get("School")
     casting_time = spell_json.get("Casting Time")
     spell_range = spell_json.get("Range")
@@ -323,7 +324,7 @@ def create_spell_embed_unstable(ctx: CommandContext, spell: str, spell_json: dic
         thumbnail=interactions.EmbedImageStruct(url=spell_icon, height=200, width=200),
         color=0xE2E0DD,
     )
-    embed_initial.set_author(author.name, icon_url=author_url(author, ctx.guild_id))
+    embed_initial.set_author(author.name, icon_url=author_url(author))
     meta = f"**Casting Time**: {casting_time}\n"
     meta += f"**Range**: {spell_range}\n"
     meta += f"**Components**: {components}\n"
@@ -365,16 +366,3 @@ async def user_check(ctx):
         )
         return True
     return False
-
-
-def parse_compound_dice(dice_syntax):
-    def __dice(match):
-        a, b = match.group(1).split("d")
-        a, b = int(a), int(b)
-        return str(random.randint(a, a * b))
-
-    sanitize_dice = lambda s: re.sub(constants.SANITIZE_DICE, "", s)
-
-    dice_syntax = sanitize_dice(dice_syntax)
-    eval_string = re.sub(constants.EVAL_STRING_STR, __dice, dice_syntax)
-    return eval_string

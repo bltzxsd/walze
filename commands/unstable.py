@@ -1,6 +1,6 @@
 import interactions
-import py_expression_eval
 import pyfiglet
+import rolldice
 from interactions import CommandContext
 from lib import constants, misc
 
@@ -18,12 +18,12 @@ class Unstable(interactions.Extension):
         pass
 
     @unstable.subcommand(
-        name="evaluate",
+        name="eval",
         description="Evaluates compound dice rolls. ",
         options=[
             interactions.Option(
                 name="expr",
-                description="Dice expression. Eg: `1d8+4+1d6+1d6+1d6",
+                description="Dice expression. Eg: `1d8+4-1d6*1d6/1d6",
                 type=interactions.OptionType.STRING,
                 required=True,
             ),
@@ -35,27 +35,25 @@ class Unstable(interactions.Extension):
             ),
         ],
     )
-    async def complex(
+    async def unstable_eval(
         self, ctx: interactions.CommandContext, expr: str, ephemeral: bool = False
     ):
-        dice_syntax = expr
-        expr = misc.parse_compound_dice(expr)
-        parser = py_expression_eval.Parser()
         try:
-            expression = parser.parse(expr).evaluate({})
-        except Exception as e:
-            expression = ""
-            title, desc, status = "Error", f"Exception Occured:\n{e}", "error"
-            ephemeral = True
-        else:
-            figlet = pyfiglet.figlet_format(str(expression), "fraktur")
-            figlet = figlet.replace("`", "\u200B`")
-            desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{expression}**"
-            title, status = f"Evaluation: {dice_syntax}", "ok"
+            result, explanation = rolldice.roll_dice(expr)
+            explanation = explanation.replace(",", ", ")
+        except (rolldice.DiceGroupException, rolldice.DiceOperatorException) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed(f"Exception Occured", str(exc), "error"),
+                ephemeral=True,
+            )
 
+        figlet = pyfiglet.figlet_format(str(result), "fraktur")
+        figlet = figlet.replace("`", "\u200B`")
+        desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{result}**"
+        title, status = f"Evaluation: {expr}", "ok"
         embed = misc.quick_embed(title, desc, status)
-        if expression:
-            embed.set_footer(f"{expr} = {expression}")
+
+        embed.set_footer(f"{explanation} = {result}")
         await ctx.send(embeds=embed, ephemeral=ephemeral)
 
     @unstable.subcommand(
@@ -129,7 +127,7 @@ class Unstable(interactions.Extension):
             likelihood = "Unlikely to hit or exceed."
 
         chance_decimal = str(round(chance_decimal, 2)) + "%"
-        author_url = misc.author_url(ctx.author, ctx.guild_id)
+        author_url = misc.author_url(ctx.author)
         embed = interactions.Embed(
             title=f"Probability to exceed {target}",
             description="**" + chance_decimal + "**",
