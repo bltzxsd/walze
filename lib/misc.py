@@ -369,7 +369,11 @@ async def user_check(ctx):
 
 
 def unstable_roll_embed(
-    author: User | Member, dice_expr: str, result, explanation: str, implication: str = ""
+    author: User | Member,
+    dice_expr: str,
+    result,
+    explanation: str,
+    implication: str = "",
 ):
     author_icon = author_url(author)
     title = dice_expr.replace("k", "").replace("K", "")
@@ -391,6 +395,7 @@ def unstable_roll_embed(
     embed.add_field("Result", result_field, inline=False)
     embed.set_footer(f"{result}")
     return embed
+
 
 def author_name(author: interactions.Member | interactions.User):
     if isinstance(author, Member):
