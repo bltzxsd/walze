@@ -237,35 +237,8 @@ class Unstable(interactions.Extension):
         if implication:
             display_expr = "1" + dice_expr[1:]
 
-        embed = unstable_roll_embed(
-            ctx.author, display_expr, result, explanation, implication
-        )
+
         await ctx.send(embeds=embed, ephemeral=ephemeral)
-
-
-def unstable_roll_embed(
-    author: User | Member, dice_expr: str, result, explanation: str, implication: str
-):
-    author_icon = misc.author_url(author)
-    title = dice_expr.replace("k", "").replace("K", "")
-    embed = interactions.Embed(title=title, color=0xE2E0DD)
-    name = author.user.username if isinstance(author, Member) else author.username
-    embed.set_author(name=name, icon_url=author_icon)
-
-    match implication:
-        case "k":
-            embed.add_field("Implication", "*Rolling with Disadvantage*")
-        case "K":
-            embed.add_field("Implication", "*Rolling with Advantage*")
-        case _:
-            pass
-
-    embed.add_field("Products", explanation)
-    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace("`", "\u200b`")
-    result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
-    embed.add_field("Result", result_field, inline=False)
-    embed.set_footer(f"{result}")
-    return embed
 
 
 def setup(client):

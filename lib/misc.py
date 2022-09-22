@@ -7,7 +7,7 @@ import interactions
 import pyfiglet
 from interactions import CommandContext, Embed, EmbedImageStruct, Member, User
 
-from lib import constants
+from lib import constants, misc
 
 stats = [
     "Acrobatics",
@@ -366,3 +366,34 @@ async def user_check(ctx):
         )
         return True
     return False
+
+
+def unstable_roll_embed(
+    author: User | Member, dice_expr: str, result, explanation: str, implication: str = ""
+):
+    author_icon = author_url(author)
+    title = dice_expr.replace("k", "").replace("K", "")
+    embed = interactions.Embed(title=title, color=0xE2E0DD)
+    name = misc.author_name(author)
+    embed.set_author(name=name, icon_url=author_icon)
+
+    match implication:
+        case "k":
+            embed.add_field("Implication", "*Rolling with Disadvantage*")
+        case "K":
+            embed.add_field("Implication", "*Rolling with Advantage*")
+        case _:
+            pass
+
+    embed.add_field("Products", explanation)
+    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace("`", "\u200b`")
+    result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
+    embed.add_field("Result", result_field, inline=False)
+    embed.set_footer(f"{result}")
+    return embed
+
+def author_name(author: interactions.Member | interactions.User):
+    if isinstance(author, Member):
+        return author.user.username
+    else:
+        return author.username
