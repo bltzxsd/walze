@@ -17,7 +17,29 @@ ENTITIES_SYNTAX = re.compile(r"[a-zA-Z0-9]+\d*:\d+")
 # DICE_SYNTAX = re.compile(r"\d*?\d*d\d+[-+]?\d*")
 DICE_SYNTAX = re.compile(r"\d*?\d*d\d+\s?[-+]?\s?\d*")
 SANITIZE_DICE = re.compile(r"[^\d+\-*\/d]")
-EVAL_STRING_STR = re.compile(r"(\d+d\d+)")
+INITIAL_DICE_SYNTAX = re.compile(r"(\d*d\d+)")
+
+# autocomplete
+
+
+def generate_spells() -> list:
+    spells_url = "https://dnd5e.wikidot.com/spells"
+    page = requests.get(spells_url)
+    if page.status_code != 200:
+        return
+
+    soup = BeautifulSoup(page.text, "html.parser", parse_only=SoupStrainer("a"))
+    # all spells except Homebrew and Unearthed Arcana
+    spells = [
+        (a.contents[0], a.get("href").split(":")[1])
+        for a in soup.find_all("a", href=True)[49:-38]
+        if not any(spell in a.contents[0] for spell in ["HB", "UA"])
+    ]
+    spells.sort(key=itemgetter(1))
+    return spells
+
+
+SPELL_LIST = generate_spells()
 
 
 class CharacterSheets:
@@ -40,23 +62,3 @@ class CharacterSheets:
 
 
 SHEETS = CharacterSheets("stats.json")
-
-# autocomplete
-def generate_spells() -> list:
-    spells_url = "https://dnd5e.wikidot.com/spells"
-    page = requests.get(spells_url)
-    if page.status_code != 200:
-        return
-
-    soup = BeautifulSoup(page.text, "html.parser", parse_only=SoupStrainer("a"))
-    # all spells except Homebrew and Unearthed Arcana
-    spells = [
-        (a.contents[0], a.get("href").split(":")[1])
-        for a in soup.find_all("a", href=True)[49:-38]
-        if not any(spell in a.contents[0] for spell in ["HB", "UA"])
-    ]
-    spells.sort(key=itemgetter(1))
-    return spells
-
-
-SPELL_LIST = generate_spells()

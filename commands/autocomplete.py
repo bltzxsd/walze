@@ -44,7 +44,7 @@ class AutoComplete(interactions.Extension):
         autocomplete = [
             misc.create_choice(spellname, url)
             for spellname, url in constants.SPELL_LIST
-            if spellname.lower().startswith(value.lower())
+            if value.lower() in spellname.lower()
         ][:25]
         await ctx.populate(autocomplete)
 

@@ -1,6 +1,7 @@
 import string
 
 import interactions
+import rolldice
 from interactions import CommandContext
 from lib import json_lib, misc
 from lib.misc import user_check
@@ -10,7 +11,9 @@ class ModifyAttributes(interactions.Extension):
     def __init__(self, client):
         self.client: interactions.Client = client
 
-    @interactions.extension_command(name="modify", description="Modify a a value.")
+    @interactions.extension_command(
+        name="modify", description="Modify a a value."
+    )
     async def modify(self, ctx: CommandContext):
         pass
 
@@ -55,31 +58,29 @@ class ModifyAttributes(interactions.Extension):
     ):
         if await user_check(ctx):
             return
-        try:
-            dmg = int(dmg) - 1
-            op = "+" if dmg >= 0 else ""
-            dmg = "1d1" + op + str(dmg)
-        except:
-            pass
 
         try:
-            misc.decipher_all([hit, dmg])
+            _, _ = rolldice.roll_dice(hit)
+            _, _ = rolldice.roll_dice(dmg)
             if attribute:
-                misc.decipher_dice(attribute)
-        except ValueError:
+                _, _ = rolldice.roll_dice(attribute)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed(
-                    "Error", "A value here does not fit the roll syntax!", "error"
-                ),
+                embeds=misc.quick_embed("Error", str(exc), "error"),
                 ephemeral=True,
             )
+
         value = {"hit": hit, "dmg": dmg, "attribute": attribute}
 
         output, reply, color = await json_lib.modify_param(
             ctx, access="weapons", key=string.capwords(weapon), value=value
         )
         await ctx.send(
-            embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
+            embeds=misc.quick_embed(output, f"```{reply}```", color),
+            ephemeral=True,
         )
 
     @modify.subcommand(
@@ -108,7 +109,8 @@ class ModifyAttributes(interactions.Extension):
             ctx, access="char", key=char, value=value
         )
         await ctx.send(
-            embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
+            embeds=misc.quick_embed(output, f"```{reply}```", color),
+            ephemeral=True,
         )
 
     @modify.subcommand(
@@ -133,22 +135,23 @@ class ModifyAttributes(interactions.Extension):
     async def modify_custom(self, ctx: CommandContext, key: str, value: str):
         if await user_check(ctx):
             return
+        value = value.replace("k", "").replace("K", "")
         try:
-            misc.decipher_dice(value)
-        except ValueError as error:
+            _, _ = rolldice.roll_dice(value)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed(
-                    "Error",
-                    f"Not a valid dice roll: {value}\nOnly valid dice syntax is allowed\n{error}",
-                    "error",
-                ),
+                embeds=misc.quick_embed("Error", str(exc), "error"),
                 ephemeral=True,
             )
         output, reply, color = await json_lib.modify_param(
-            ctx, access="custom", key=string.capwords(key), value=value
+            ctx, access="custom", key=key, value=value
         )
         await ctx.send(
-            embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
+            embeds=misc.quick_embed(output, f"```{reply}```", color),
+            ephemeral=True,
         )
 
     @modify.subcommand(
@@ -177,7 +180,8 @@ class ModifyAttributes(interactions.Extension):
             ctx, access="skills", key=string.capwords(skill), value=value
         )
         await ctx.send(
-            embeds=misc.quick_embed(output, f"```{reply}```", color), ephemeral=True
+            embeds=misc.quick_embed(output, f"```{reply}```", color),
+            ephemeral=True,
         )
 
     @interactions.extension_command(
@@ -193,17 +197,23 @@ class ModifyAttributes(interactions.Extension):
         options=[
             interactions.Option(
                 name="attributes",
-                description="Save all skills at once in alphabetical order. Eg: `1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18`",
+                description="Save all skills at once in alphabetical order. Eg: `1 2 3 ... 17 18`",
                 type=interactions.OptionType.STRING,
                 required=True,
             )
         ],
     )
-    async def save_skills(self, ctx: interactions.CommandContext, attributes: str):
+    async def save_skills(
+        self, ctx: interactions.CommandContext, attributes: str
+    ):
         if await user_check(ctx):
             return
-        title, desc, outcome = await json_lib.write_stats(ctx.author, attributes)
-        await ctx.send(embeds=misc.quick_embed(title, desc, outcome), ephemeral=True)
+        title, desc, outcome = await json_lib.write_stats(
+            ctx.author, attributes
+        )
+        await ctx.send(
+            embeds=misc.quick_embed(title, desc, outcome), ephemeral=True
+        )
 
 
 def setup(client):

@@ -32,10 +32,10 @@ stats = [
 
 
 class CharRepr:
-    def __init__(self, author: Member):
+    def __init__(self, author: Member | User):
         self.character = {
             str(author.id): {
-                "name": author.user.username,
+                "name": author_name(author),
                 "stats": {},
                 "weapons": {},
                 "custom": {},
@@ -92,7 +92,7 @@ def find_dice(string: str):
         rolls.replace(" ", "")
         rolls = rolls.split("d")
         if not rolls[0]:
-            rolls[0] == 1
+            rolls[0] = 1
         else:
             rolls[0] = int(rolls[0])
 
@@ -143,7 +143,7 @@ async def open_stats(author: Member):
 
 
 def roll_embed(
-    author: Member,
+    author: Member | User,
     rolls: int,
     sides: int,
     final_num: int,
@@ -160,7 +160,7 @@ def roll_embed(
     try:
         base_url = "https://cdn.discordapp.com/avatars"
         user_avatar = f"{base_url}/{author.id}/{author.avatar}.webp"
-        title = author.name + "'s Roll"
+        title = author_name(author) + "'s Roll"
     except AttributeError:
         user_avatar = ""
         title = "Your Roll"
@@ -186,11 +186,15 @@ def roll_embed(
     # since a "\`" does not work in code formatting.
     figlet = figlet.replace("`", "\u200B`")
 
-    embed.add_field(name="Generated Numbers", value=f"{random_nums}", inline=False)
+    embed.add_field(
+        name="Generated Numbers", value=f"{random_nums}", inline=False
+    )
     if len(figlet) < 1024:
         # this might fail because discord does not allow for
         # more than 1024 characters in a field value
-        embed.add_field(name="Final Roll", value=f"```{figlet}```", inline=False)
+        embed.add_field(
+            name="Final Roll", value=f"```{figlet}```", inline=False
+        )
     else:
         embed.add_field(name="Result", value=f"**{final_num}**")
         # logging.exception("Failed to add figlet field.")
@@ -225,11 +229,6 @@ class Choices:
 
 
 def author_url(author: Member | User):
-    # if isinstance(author, Member):
-    #     icon = author.get_avatar_url(guild_id)
-    # else:
-    #     icon = author.avatar
-    # if requests.get(icon).status_code == 404:
     try:
         base_url = "https://cdn.discordapp.com/avatars"
         icon = f"{base_url}/{author.id}/{author.avatar}.webp"
@@ -244,13 +243,19 @@ def disable(buttons: list[interactions.Button]):
         button.disabled = True
 
 
-def to_button(label: str, style):
-    return interactions.Button(style=style, label=label, custom_id=label)
+def to_button(
+    label: str,
+    id: str = "",
+    style: interactions.ButtonStyle = interactions.ButtonStyle.SECONDARY,
+):
+    if not id:
+        id = label
+    return interactions.Button(style=style, label=label, custom_id=id)
 
 
 # ttps://stackoverflow.com/a/65038809
 # hope the person who wrote this is doing amazing rn. actual lifesaver
-def wrap_spell(source_text, separator_chars=["."], width=1024, keep_separators=True):
+def wrap_spell(source_text, separator_chars, width=1024, keep_separators=True):
     current_length = 0
     latest_separator = -1
     current_chunk_start = 0
@@ -321,10 +326,12 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
     embed_initial = interactions.Embed(
         title=title,
         description=f"*{level_school}*",
-        thumbnail=interactions.EmbedImageStruct(url=spell_icon, height=200, width=200),
+        thumbnail=interactions.EmbedImageStruct(
+            url=spell_icon, height=200, width=200
+        ),
         color=0xE2E0DD,
     )
-    embed_initial.set_author(author.name, icon_url=author_url(author))
+    embed_initial.set_author(author_name(author), icon_url=author_url(author))
     meta = f"**Casting Time**: {casting_time}\n"
     meta += f"**Range**: {spell_range}\n"
     meta += f"**Components**: {components}\n"
@@ -335,7 +342,9 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
     )
 
     if len(description) > 1024:  # embed limit
-        split_descriptions = wrap_spell(description).split("<linebreak>")
+        split_descriptions = wrap_spell(
+            description, separator_chars=["."]
+        ).split("<linebreak>")
     else:
         split_descriptions = [description]
 
@@ -361,7 +370,9 @@ async def user_check(ctx):
     barred = constants.CONFIG.barred_users()
     if int(ctx.author.id) in barred or int(ctx.user.id) in barred:
         await ctx.send(
-            embeds=quick_embed("Nah", "I'm not playing. Use your sheet.", "error"),
+            embeds=quick_embed(
+                "Nah", "I'm not playing. Use your sheet.", "error"
+            ),
             ephemeral=True,
         )
         return True
@@ -390,11 +401,21 @@ def unstable_roll_embed(
             pass
 
     embed.add_field("Products", explanation)
-    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace("`", "\u200b`")
+    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace(
+        "`", "\u200b`"
+    )
     result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
     embed.add_field("Result", result_field, inline=False)
     embed.set_footer(f"{result}")
     return embed
+
+
+def normalize_implication(dice_syn: str, implication: str = ""):
+    sub_str = r"\1{}".format(implication)
+    dice_syn = re.sub(constants.INITIAL_DICE_SYNTAX, sub_str, dice_syn)
+    if implication and dice_syn[0] == "1":
+        dice_syn = "2" + dice_syn[1:]
+    return dice_syn
 
 
 def author_name(author: interactions.Member | interactions.User):

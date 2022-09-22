@@ -29,11 +29,15 @@ class BaseCommands(interactions.Extension):
             )
         )
 
-    @interactions.extension_command(name="kill", description="Kill bot.", scope=scope)
+    @interactions.extension_command(
+        name="kill", description="Kill bot.", scope=scope
+    )
     async def kill(self, ctx: CommandContext):
         if int(ctx.author.id) == constants.CONFIG.owner.get("id", 0):
             await ctx.send(
-                embeds=misc.quick_embed("Terminating", "Terminating bot.", "ok"),
+                embeds=misc.quick_embed(
+                    "Terminating", "Terminating bot.", "ok"
+                ),
                 ephemeral=True,
             )
             raise KeyboardInterrupt
@@ -67,7 +71,9 @@ class BaseCommands(interactions.Extension):
             except ValueError:
                 item[1] = None
 
-        entities = list(filter(lambda e: e[0] != "" and e[1] is not None, entities))
+        entities = list(
+            filter(lambda e: e[0] != "" and e[1] is not None, entities)
+        )
         entities.sort(key=operator.itemgetter(1), reverse=True)
 
         pretty_print = [[name, initiative] for name, initiative in entities]
@@ -77,7 +83,9 @@ class BaseCommands(interactions.Extension):
             headers="firstrow",
         )
         await ctx.send(
-            embeds=misc.quick_embed("Ordered Initiative", f"```{pretty_print}```", "ok")
+            embeds=misc.quick_embed(
+                "Ordered Initiative", f"```{pretty_print}```", "ok"
+            )
         )
 
     @interactions.extension_command(
@@ -103,23 +111,35 @@ class BaseCommands(interactions.Extension):
                 ),
                 ephemeral=True,
             )
+        retrieved = json.dumps(retrieved, indent=2)
 
-        retrieved = json.dumps(retrieved, indent=4)
         if len(retrieved) > 1024:
             file = io.StringIO(retrieved)
-            files = interactions.File(filename=f"{ctx.author.name}_stats.json", fp=file)
+            files = interactions.File(
+                filename=f"{misc.author_name(ctx.author)}_stats.json", fp=file
+            )
+            embed = misc.quick_embed(
+                f"{ctx.author.name}'s Parameters", "", "ok"
+            )
+            embed.set_author(
+                name=misc.author_name(ctx.author),
+                icon_url=misc.author_url(ctx.author),
+            )
+            embed.set_footer("Length: " + str(len(retrieved)))
             return await ctx.send(
-                embeds=misc.quick_embed(f"{ctx.author.name}'s Parameters", "", "ok"),
+                embeds=embed,
                 files=files,
                 ephemeral=ephemeral,
             )
 
+        embed = misc.quick_embed("Saved Parameters", f"```{retrieved}```", "ok")
+        embed.set_author(
+            name=misc.author_name(ctx.author),
+            icon_url=misc.author_url(ctx.author),
+        )
+        embed.set_footer("Length: " + str(len(retrieved)))
         await ctx.send(
-            embeds=misc.quick_embed(
-                f"{ctx.author.name}'s Parameters",
-                f"```{retrieved}```",
-                "ok",
-            ),
+            embeds=embed,
             ephemeral=ephemeral,
         )
 

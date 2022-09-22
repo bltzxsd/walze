@@ -1,4 +1,5 @@
 import json
+import pprint
 import re
 
 import aiofiles
@@ -13,33 +14,17 @@ async def modify_param(
 
     content = await misc.open_stats(ctx.author)
 
-    author = content[str(ctx.author.id)]
-    try:
-        skills = author.get("stats")
-        weapon = author.get("weapons")
-        custom = author.get("custom")
-        # spells = author.get("spells")
-        features = author.get("features")
-    except KeyError:
-        author["stats"] = {}
-        author["weapons"] = {}
-        author["custom"] = {}
-        # author["spells"] = {}
-        author["features"] = {}
+    author: dict = content.get(str(ctx.author.id))
 
     match access:
         case "char":
             level = author
         case "skills":
-            level = skills
+            level = author.get("stats", {})
         case "weapons":
-            level = weapon
+            level = author.get("weapons", {})
         case "custom":
-            level = custom
-        # case "spells":
-        #     level = spells
-        case "features":
-            level = features
+            level = author.get("custom", {})
         case _:
             return "Error", "Access Level not specified", "error"
 
@@ -57,11 +42,15 @@ async def modify_param(
 
         level[key] = value
         await save.write(json.dumps(content, indent=4))
-        return (
-            "Values Modified",
-            f"Previous Value:\n{key}: {prev_value}\nNew Value:\n{key}: {level[key]}",
-            "ok",
+
+        prev_value = (
+            pprint.pformat(prev_value, indent=4)
+            if prev_value is not None
+            else prev_value
         )
+        new_value = pprint.pformat(level[key], indent=4)
+        desc = f"Changed '{key}' from:\n\t{prev_value}\nto:\n\t{new_value}"
+        return ("Values Modified", desc, "ok")
 
 
 def create_skills(skills: str):
@@ -69,9 +58,12 @@ def create_skills(skills: str):
     try:
         assert len(skill_values) == 18
     except AssertionError as exc:
-        raise AssertionError(f"{skill_values}") from exc
-
-    skills: dict = {name: value for name, value in zip(misc.stats, skill_values)}
+        raise AssertionError(
+            f"Invalid number of values provided ({len(skill_values)})\n{pprint.pformat(skill_values, indent=4)}"
+        ) from exc
+    skills: dict = {
+        name: value for name, value in zip(misc.stats, skill_values)
+    }
     return skills
 
 
@@ -81,11 +73,11 @@ async def write_stats(author: Member, skills: str):
     except AssertionError as exc:
         return (
             "Error",
-            f"Invalid number of values provided ({len(skills)}). Needed: 18.\n{exc}",
+            str(exc),
             "error",
         )
     content = await misc.open_stats(author)
-    skills_json: dict = content[str(author.id)]["stats"]
+    skills_json: dict = content.get(str(author.id)).get("stats")
     prev = json.dumps(skills_json, indent=4)
     skills_json.update(skills)
 
@@ -109,7 +101,9 @@ def spell_to_dict(web_spell: str) -> tuple[str, dict]:
     spell_lists = spell_splits[-1].split(". ")[-1]
     name = spell_splits[0]
     spell_source = spell_splits[3].split(": ")[-1]
-    level_school = spell_splits[4].split(": ")[-1].lower() + f". ({spell_lists})"
+    level_school = (
+        spell_splits[4].split(": ")[-1].lower() + f". ({spell_lists})"
+    )
     casting_time = spell_splits[5].split(": ")[-1]
     spell_range = spell_splits[6].split(": ")[-1]
     components = spell_splits[7].split(": ")[-1]

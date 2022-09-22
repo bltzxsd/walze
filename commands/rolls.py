@@ -3,6 +3,7 @@ import string
 
 import interactions
 import requests
+import rolldice
 from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
 from lib import json_lib, misc
@@ -11,6 +12,111 @@ from lib import json_lib, misc
 class RollCommands(interactions.Extension):
     def __init__(self, client):
         self.client: interactions.Client = client
+
+    @interactions.extension_command(
+        name="roll",
+        description="Roll dice.",
+        options=[
+            interactions.Option(
+                name="rolls",
+                description="Number of times to roll the dice. Eg: `1`, `2`, `3`",
+                type=interactions.OptionType.INTEGER,
+                required=True,
+            ),
+            interactions.Option(
+                name="sides",
+                description="Number of sides the dice should have. Eg: `4`, `6`, `8`, `10`, `20`",
+                type=interactions.OptionType.INTEGER,
+                required=True,
+            ),
+            interactions.Option(
+                name="mod",
+                description="Add or subtract modifiers from the dice roll. Eg: `1` or `-2`",
+                type=interactions.OptionType.INTEGER,
+                required=False,
+            ),
+            interactions.Option(
+                name="implication",
+                description="Choose if the roll should have an advantage or disadvantage.",
+                type=interactions.OptionType.STRING,
+                choices=[
+                    interactions.Choice(name="Advantage", value="K"),
+                    interactions.Choice(name="Disadvantage", value="k"),
+                ],
+                required=False,
+            ),
+            interactions.Option(
+                name="extension",
+                description="Any additional dice to add or subtract. Eg: `1d4+2d6+4`",
+                type=interactions.OptionType.STRING,
+                required=False,
+            ),
+            interactions.Option(
+                name="ephemeral",
+                description="Whether the result should only be visible to the user.",
+                type=interactions.OptionType.BOOLEAN,
+                required=False,
+            ),
+        ],
+    )
+    async def roll(
+        self,
+        ctx,
+        rolls: int,
+        sides: int,
+        mod: int = 0,
+        implication: str = "",
+        extension: str = "",
+        ephemeral: bool = False,
+    ):
+        if rolls <= 0:
+            return await ctx.send(
+                embed=misc.quick_embed(
+                    "Error", "Rolls can't be negative or zero!", "error"
+                )
+            )
+        if sides < 1:
+            return await ctx.send(
+                embed=misc.quick_embed(
+                    "Error", "A dice can't have less than 1 sides", "error"
+                )
+            )
+
+        dice_expr = str(rolls) + "d" + str(sides)
+        display_syn = dice_expr
+        if implication:
+            dice_expr += implication
+            display_syn += implication
+            if dice_expr[0] == "1":
+                dice_expr = "2" + dice_expr[1:]
+
+        if mod != 0:
+            modifier = str(mod) if str(mod)[0] == "-" else f"+{mod}"
+            dice_expr += modifier
+            display_syn += modifier
+        if extension:
+            match extension[0]:
+                case "-" | "*" | "/" | "+":
+                    opr = ""
+                case _:
+                    opr = "+"
+            dice_expr += opr + extension
+            display_syn += opr + extension
+
+        try:
+            result, explanation = rolldice.roll_dice(dice_expr)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed("Error", str(exc), "error"),
+                ephemeral=True,
+            )
+        embed = misc.unstable_roll_embed(
+            ctx.author, display_syn, result, explanation, implication
+        )
+        await ctx.send(embeds=embed, ephemeral=ephemeral)
 
     @interactions.extension_command(
         name="custom",
@@ -28,19 +134,23 @@ class RollCommands(interactions.Extension):
                 description="Choose if the roll should have an advantage or disadvantage.",
                 type=interactions.OptionType.STRING,
                 choices=[
-                    interactions.Choice(name="Advantage", value="adv"),
-                    interactions.Choice(name="Disadvantage", value="dis"),
+                    interactions.Choice(name="Advantage", value="K"),
+                    interactions.Choice(name="Disadvantage", value="k"),
                 ],
                 required=False,
             ),
         ],
     )
-    async def custom(self, ctx: CommandContext, custom: str, implication: str = ""):
+    async def custom(
+        self, ctx: CommandContext, custom: str, implication: str = ""
+    ):
         if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         try:
-            parameter = content.get(str(ctx.author.id)).get("custom").get(custom)
+            parameter = (
+                content.get(str(ctx.author.id)).get("custom").get(custom)
+            )
         except KeyError:
             return await ctx.send(
                 embeds=misc.quick_embed(
@@ -48,11 +158,22 @@ class RollCommands(interactions.Extension):
                 ),
                 ephemeral=True,
             )
+        display_param = parameter
+        parameter = "".join(parameter.split())
+        parameter = misc.normalize_implication(parameter, implication)
+        try:
+            result, explanation = rolldice.roll_dice(parameter)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed("Error", str(exc), "error"),
+                ephemeral=True,
+            )
 
-        rolls, sides, mod = misc.decipher_dice(parameter)
-        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
-        embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, implication, mod
+        embed = misc.unstable_roll_embed(
+            ctx.author, display_param, result, explanation, implication
         )
         await ctx.send(embeds=embed)
 
@@ -87,7 +208,9 @@ class RollCommands(interactions.Extension):
                 ephemeral=True,
             )
         soup = BeautifulSoup(
-            page.text, "html.parser", parse_only=SoupStrainer("div", "main-content")
+            page.text,
+            "html.parser",
+            parse_only=SoupStrainer("div", "main-content"),
         )
         spellname, spell_attrs = json_lib.spell_to_dict(soup.get_text())
 
@@ -97,12 +220,7 @@ class RollCommands(interactions.Extension):
         dice: str = dice + spell_attrs.get("At Higher Levels")
         dice_syns = [*set(misc.find_dice(dice))]  # remove dupes
 
-        def to_button(button):
-            return interactions.Button(
-                style=interactions.ButtonStyle.SECONDARY, label=button, custom_id=button
-            )
-
-        buttons = [to_button(dice) for dice in dice_syns]
+        buttons = [misc.to_button(dice) for dice in dice_syns]
 
         link_button = interactions.Button(
             style=interactions.ButtonStyle.LINK,
@@ -127,7 +245,9 @@ class RollCommands(interactions.Extension):
                 return True
             else:
                 error_embed = misc.quick_embed(
-                    "Error", "Not allowed to interact with this button.", "error"
+                    "Error",
+                    "Not allowed to interact with this button.",
+                    "error",
                 )
                 error_embed.set_author(
                     button_ctx.author.name,
@@ -138,7 +258,7 @@ class RollCommands(interactions.Extension):
 
         def disable(buttons: list[interactions.Button]):
             for button in buttons:
-                if not button.style == interactions.ButtonStyle.LINK:
+                if button.style != interactions.ButtonStyle.LINK:
                     button.disabled = True
 
         try:
@@ -156,19 +276,37 @@ class RollCommands(interactions.Extension):
                     ),
                     ephemeral=True,
                 )
-                return await ctx.edit(components=interactions.spread_to_rows(*buttons))
+                return await ctx.edit(
+                    components=interactions.spread_to_rows(*buttons)
+                )
             else:
                 rolls, sides, mod = misc.decipher_dice(performed)
+                dice_syn = str(rolls) + "d" + str(sides)
+                if mod != 0:
+                    dice_syn += str(mod) if mod < 0 else f"+{mod}"
+
                 disable(buttons)
                 await ctx.edit(components=interactions.spread_to_rows(*buttons))
-                result, generated_values = misc.roll_dice(rolls, sides, "", mod)
-                roll_embed = misc.roll_embed(
-                    ctx.author, rolls, sides, result, generated_values, "", mod=mod
+                try:
+                    result, explanation = rolldice.roll_dice(dice_syn)
+                except (
+                    rolldice.DiceGroupException,
+                    rolldice.DiceOperatorException,
+                ) as exc:
+                    return await ctx.send(
+                        embeds=misc.quick_embed("Error", str(exc), "error"),
+                        ephemeral=True,
+                    )
+                roll_embed = misc.unstable_roll_embed(
+                    ctx.author, dice_syn, result, explanation, ""
                 )
+
                 return await button_ctx.send(embeds=roll_embed)
         except asyncio.TimeoutError:
             disable(buttons)
-            return await ctx.edit(components=interactions.spread_to_rows(*buttons))
+            return await ctx.edit(
+                components=interactions.spread_to_rows(*buttons)
+            )
 
     @interactions.extension_command(
         name="initiative",
@@ -188,19 +326,22 @@ class RollCommands(interactions.Extension):
             )
 
         try:
-            rolls, sides, mod = misc.decipher_dice(init)
-        except ValueError as e:
+            result, explanation = rolldice.roll_dice(init)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed("Error", f"Please report this!\n{e}", "error"),
+                embeds=misc.quick_embed("Error", str(exc), "error"),
                 ephemeral=True,
             )
 
-        result, generated_values = misc.roll_dice(rolls=rolls, sides=sides, mod=mod)
-        embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, mod=mod
-        )
+        embed = misc.unstable_roll_embed(ctx.author, init, result, explanation)
+
         syntax_embed = misc.quick_embed(
-            "Initiative Syntax", f"```{ctx.author.user.username}:{result} ```", "ok"
+            "Initiative Syntax",
+            f"```{misc.author_name(ctx.author)}:{result} ```",
+            "ok",
         )
         syntax_embed.set_footer(
             "Copy this ⬆️ (including the space at the end) for the `/sort` command! "
@@ -223,22 +364,28 @@ class RollCommands(interactions.Extension):
                 description="Choose if the roll should have an advantage or disadvantage.",
                 type=interactions.OptionType.STRING,
                 choices=[
-                    interactions.Choice(name="Advantage", value="adv"),
-                    interactions.Choice(name="Disadvantage", value="dis"),
+                    interactions.Choice(name="Advantage", value="K"),
+                    interactions.Choice(name="Disadvantage", value="k"),
                 ],
                 required=False,
             ),
         ],
     )
     async def skill(
-        self, ctx: interactions.CommandContext, skill: str, implication: str = ""
+        self,
+        ctx: interactions.CommandContext,
+        skill: str,
+        implication: str = "",
     ):
         if await misc.user_check(ctx):
             return
         content = await misc.open_stats(ctx.author)
         try:
+            display_skill = skill
             skill = (
-                content.get(str(ctx.author.id)).get("stats").get(string.capwords(skill))
+                content.get(str(ctx.author.id))
+                .get("stats")
+                .get(string.capwords(skill))
             )
         except KeyError:
             return await ctx.send(
@@ -250,10 +397,29 @@ class RollCommands(interactions.Extension):
                 ephemeral=True,
             )
 
-        rolls, sides, mod = 1, 20, skill
-        result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
-        embed = misc.roll_embed(
-            ctx.author, rolls, sides, result, generated_values, implication, mod
+        dice_syn = "1d20"
+        if implication:
+            dice_syn = "2" + dice_syn[1:] + implication
+        if skill != 0:
+            dice_syn += str(skill) if skill < 0 else f"+{skill}"
+
+        try:
+            result, explanation = rolldice.roll_dice(dice_syn)
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed("Error", str(exc), "error"),
+                ephemeral=True,
+            )
+        title = string.capwords(display_skill) + ": " + "1d20" + str(skill)
+        embed = misc.unstable_roll_embed(
+            ctx.author,
+            title,
+            result,
+            explanation,
+            implication,
         )
         await ctx.send(embeds=embed)
 
@@ -273,8 +439,8 @@ class RollCommands(interactions.Extension):
                 description="implication for the roll",
                 type=interactions.OptionType.STRING,
                 choices=[
-                    interactions.Choice(name="Advantage", value="adv"),
-                    interactions.Choice(name="Disadvantage", value="dis"),
+                    interactions.Choice(name="Advantage", value="K"),
+                    interactions.Choice(name="Disadvantage", value="k"),
                 ],
                 required=False,
             ),
@@ -295,21 +461,19 @@ class RollCommands(interactions.Extension):
             weapon = weapons.get(string.capwords(weapon))
         except KeyError:
             return await ctx.send(
-                embeds=misc.quick_embed("Error", "No such weapon available!", "error"),
+                embeds=misc.quick_embed(
+                    "Error", "No such weapon available!", "error"
+                ),
                 ephemeral=True,
-            )
-
-        def to_button(button, id=""):
-            if not id:
-                id = button
-            return interactions.Button(
-                style=interactions.ButtonStyle.SECONDARY, label=button, custom_id=id
             )
 
         hit = weapon.get("hit")
         dmg = weapon.get("dmg")
         att = weapon.get("attribute", "")
         initial_embed = misc.quick_embed(weapon_str, "", "ok")
+        initial_embed.set_author(
+            misc.author_name(ctx.author), misc.author_url(ctx.author)
+        )
         initial_embed.add_field("Hit", hit)
         initial_embed.add_field("Damage", dmg)
         attacks = [("Attack", hit), ("Damage", dmg)]
@@ -317,7 +481,7 @@ class RollCommands(interactions.Extension):
             attacks.append(("Attribute", att))
             initial_embed.add_field("Attribute", att)
 
-        buttons = [to_button(name, dice) for name, dice in attacks]
+        buttons = [misc.to_button(name, dice) for name, dice in attacks]
 
         await ctx.send(embeds=initial_embed, components=buttons)
 
@@ -328,7 +492,7 @@ class RollCommands(interactions.Extension):
                 "Error", "Not allowed to interact with this button.", "error"
             )
             error_embed.set_author(
-                button_ctx.author.name,
+                name=misc.author_name(button_ctx.author),
                 icon_url=misc.author_url(button_ctx.author),
             )
             await button_ctx.send(embeds=error_embed, ephemeral=True)
@@ -341,11 +505,21 @@ class RollCommands(interactions.Extension):
                 )
             )
             selected = button_ctx.data.custom_id
-            rolls, sides, mod = misc.decipher_dice(selected)
 
-            result, generated_values = misc.roll_dice(rolls, sides, implication, mod)
-            roll_embed = misc.roll_embed(
-                ctx.author, rolls, sides, result, generated_values, implication, mod
+            dice_syn = misc.normalize_implication(selected, implication)
+
+            try:
+                result, explanation = rolldice.roll_dice(dice_syn)
+            except (
+                rolldice.DiceGroupException,
+                rolldice.DiceOperatorException,
+            ) as exc:
+                return await ctx.send(
+                    embeds=misc.quick_embed("Error", str(exc), "error"),
+                    ephemeral=True,
+                )
+            roll_embed = misc.unstable_roll_embed(
+                ctx.author, dice_syn, result, explanation, ""
             )
             for button in buttons:
                 button.disabled = True

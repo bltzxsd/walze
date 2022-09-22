@@ -1,7 +1,7 @@
 import interactions
 import pyfiglet
 import rolldice
-from interactions import CommandContext, User, Member
+from interactions import CommandContext
 from lib import constants, misc
 
 scope = constants.CONFIG.owner.get("servers", [])
@@ -36,14 +36,20 @@ class Unstable(interactions.Extension):
         ],
     )
     async def unstable_eval(
-        self, ctx: interactions.CommandContext, expr: str, ephemeral: bool = False
+        self,
+        ctx: interactions.CommandContext,
+        expr: str,
+        ephemeral: bool = False,
     ):
         try:
             result, explanation = rolldice.roll_dice(expr)
             explanation = explanation.replace(",", ", ")
-        except (rolldice.DiceGroupException, rolldice.DiceOperatorException) as exc:
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed(f"Error", str(exc), "error"),
+                embeds=misc.quick_embed("Error", str(exc), "error"),
                 ephemeral=True,
             )
 
@@ -203,7 +209,7 @@ class Unstable(interactions.Extension):
                     "Error", "Rolls can't be negative or zero!", "error"
                 )
             )
-        elif sides < 1:
+        if sides < 1:
             return await ctx.send(
                 embed=misc.quick_embed(
                     "Error", "A dice can't have less than 1 sides", "error"
@@ -211,33 +217,39 @@ class Unstable(interactions.Extension):
             )
 
         dice_expr = str(rolls) + "d" + str(sides)
+        display_syn = dice_expr
         if implication:
-            dice_expr += str(implication)
+            dice_expr += implication
+            display_syn += implication
             if dice_expr[0] == "1":
                 dice_expr = "2" + dice_expr[1:]
+
         if mod != 0:
-            mod: str = str(mod)
-            dice_expr += mod if mod[0] == "-" else f"+{mod}"
+            modifier = str(mod) if str(mod)[0] == "-" else f"+{mod}"
+            dice_expr += modifier
+            display_syn += modifier
         if extension:
             match extension[0]:
-                case "-" | "*" | "/":
-                    pass
+                case "-" | "*" | "/" | "+":
+                    opr = ""
                 case _:
                     opr = "+"
             dice_expr += opr + extension
+            display_syn += opr + extension
 
         try:
             result, explanation = rolldice.roll_dice(dice_expr)
-        except (rolldice.DiceGroupException, rolldice.DiceOperatorException) as exc:
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
             return await ctx.send(
-                embeds=misc.quick_embed("Error", str(exc), "error"), ephemeral=True
+                embeds=misc.quick_embed("Error", str(exc), "error"),
+                ephemeral=True,
             )
-
-        display_expr = dice_expr
-        if implication:
-            display_expr = "1" + dice_expr[1:]
-
-
+        embed = misc.unstable_roll_embed(
+            ctx.author, display_syn, result, explanation, implication
+        )
         await ctx.send(embeds=embed, ephemeral=ephemeral)
 
 
