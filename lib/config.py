@@ -37,5 +37,3 @@ class Config:
         logging.basicConfig(
             level=level, format=format, datefmt=datefmt, filename=filename
         )
-    
-    
