@@ -413,7 +413,12 @@ class RollCommands(interactions.Extension):
                 embeds=misc.quick_embed("Error", str(exc), "error"),
                 ephemeral=True,
             )
-        title = string.capwords(display_skill) + ": " + "1d20" + str(skill)
+        title = (
+            string.capwords(display_skill)
+            + ": "
+            + "1d20"
+            + (str(skill) if skill < 0 else f"+{skill}")
+        )
         embed = misc.unstable_roll_embed(
             ctx.author,
             title,
