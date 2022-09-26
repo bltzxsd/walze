@@ -72,7 +72,7 @@ class ModifyAttributes(interactions.Extension):
         weapon: str,
         hit: str,
         dmg: str,
-        type: str = "",
+        type: str,
     ):
         if await user_check(ctx):
             return
