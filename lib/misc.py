@@ -391,6 +391,7 @@ def unstable_roll_embed(
     embed = interactions.Embed(title=title, color=0xE2E0DD)
     name = misc.author_name(author)
     embed.set_author(name=name, icon_url=author_icon)
+    explanation = explanation.replace(",", ", ")
 
     match implication:
         case "k":
