@@ -20,8 +20,6 @@ SANITIZE_DICE = re.compile(r"[^\d+\-*\/d]")
 INITIAL_DICE_SYNTAX = re.compile(r"(\d*d\d+)")
 
 # autocomplete
-
-
 def generate_spells() -> list:
     spells_url = "https://dnd5e.wikidot.com/spells"
     page = requests.get(spells_url)
