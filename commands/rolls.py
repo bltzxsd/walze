@@ -474,17 +474,15 @@ class RollCommands(interactions.Extension):
 
         hit = weapon.get("hit")
         dmg = weapon.get("dmg")
-        att = weapon.get("attribute", "")
+        typ = weapon.get("type")
         initial_embed = misc.quick_embed(weapon_str, "", "ok")
         initial_embed.set_author(
             misc.author_name(ctx.author), misc.author_url(ctx.author)
         )
+        initial_embed.add_field("Damage Type", f"*{typ}*")
         initial_embed.add_field("Hit", hit)
         initial_embed.add_field("Damage", dmg)
         attacks = [("Attack", hit), ("Damage", dmg)]
-        if att:
-            attacks.append(("Attribute", att))
-            initial_embed.add_field("Attribute", att)
 
         buttons = [misc.to_button(name, dice) for name, dice in attacks]
 

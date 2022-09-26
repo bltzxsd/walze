@@ -41,10 +41,28 @@ class ModifyAttributes(interactions.Extension):
                 required=True,
             ),
             interactions.Option(
-                name="attribute",
-                description="Value of the attribute of the weapon Eg: `2d6`, `1d6`",
+                name="type",
+                description="Value of the attribute of the weapon Eg: `Slashing`, `Necrotic`",
                 type=interactions.OptionType.STRING,
-                required=False,
+                choices=[
+                    misc.create_choice(choice)
+                    for choice in [
+                        "Slashing",
+                        "Piercing",
+                        "Bludgeoning",
+                        "Poison",
+                        "Acid",
+                        "Fire",
+                        "Cold",
+                        "Radiant",
+                        "Necrotic",
+                        "Lightning",
+                        "Thunder",
+                        "Force",
+                        "Psychic",
+                    ]
+                ],
+                required=True,
             ),
         ],
     )
@@ -54,7 +72,7 @@ class ModifyAttributes(interactions.Extension):
         weapon: str,
         hit: str,
         dmg: str,
-        attribute: str = "",
+        type: str = "",
     ):
         if await user_check(ctx):
             return
@@ -62,8 +80,6 @@ class ModifyAttributes(interactions.Extension):
         try:
             _, _ = rolldice.roll_dice(hit)
             _, _ = rolldice.roll_dice(dmg)
-            if attribute:
-                _, _ = rolldice.roll_dice(attribute)
         except (
             rolldice.DiceGroupException,
             rolldice.DiceOperatorException,
@@ -73,7 +89,7 @@ class ModifyAttributes(interactions.Extension):
                 ephemeral=True,
             )
 
-        value = {"hit": hit, "dmg": dmg, "attribute": attribute}
+        value = {"hit": hit, "dmg": dmg, "type": type}
 
         output, reply, color = await json_lib.modify_param(
             ctx, access="weapons", key=string.capwords(weapon), value=value
