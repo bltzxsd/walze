@@ -200,9 +200,9 @@ class RollCommands(interactions.Extension):
         if page.status_code != 200:
             return await ctx.send(
                 embeds=misc.quick_embed(
-                    "Failed to fetch spell",
+                    f"Failed to fetch spell: {spell_url}",
                     "Please check if spell exists and try again. Status Code:"
-                    + page.status_code,
+                    + str(page.status_code),
                     "error",
                 ),
                 ephemeral=True,
