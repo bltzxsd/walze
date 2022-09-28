@@ -12,9 +12,9 @@ class ModifyAttributes(interactions.Extension):
         self.client: interactions.Client = client
 
     @interactions.extension_command(
-        name="modify", description="Modify a a value."
+        name="modify", description="Modify a value."
     )
-    async def modify(self, ctx: CommandContext):
+    async def modify(self, _: CommandContext):
         pass
 
     @modify.subcommand(
@@ -45,22 +45,21 @@ class ModifyAttributes(interactions.Extension):
                 description="Value of the attribute of the weapon Eg: `Slashing`, `Necrotic`",
                 type=interactions.OptionType.STRING,
                 choices=[
-                    misc.create_choice(choice)
-                    for choice in [
-                        "Slashing",
-                        "Piercing",
-                        "Bludgeoning",
-                        "Poison",
-                        "Acid",
-                        "Fire",
-                        "Cold",
-                        "Radiant",
-                        "Necrotic",
-                        "Lightning",
-                        "Thunder",
-                        "Force",
-                        "Psychic",
-                    ]
+                    interactions.Choice(name="Slashing", value="Slashing"),
+                    interactions.Choice(name="Piercing", value="Piercing"),
+                    interactions.Choice(
+                        name="Bludgeoning", value="Bludgeoning"
+                    ),
+                    interactions.Choice(name="Poison", value="Poison"),
+                    interactions.Choice(name="Acid", value="Acid"),
+                    interactions.Choice(name="Fire", value="Fire"),
+                    interactions.Choice(name="Cold", value="Cold"),
+                    interactions.Choice(name="Radiant", value="Radiant"),
+                    interactions.Choice(name="Necrotic", value="Necrotic"),
+                    interactions.Choice(name="Lightning", value="Lightning"),
+                    interactions.Choice(name="Thunder", value="Thunder"),
+                    interactions.Choice(name="Force", value="Force"),
+                    interactions.Choice(name="Psychic", value="Psychic"),
                 ],
                 required=True,
             ),
