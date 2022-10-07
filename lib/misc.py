@@ -142,80 +142,6 @@ async def open_stats(author: Member):
     return content
 
 
-def roll_embed(
-    author: Member | User,
-    rolls: int,
-    sides: int,
-    final_num: int,
-    random_nums: list[int],
-    implication: str = "",
-    mod: int = 0,
-):
-    roll_syn = f"{rolls}d{sides}"
-    if mod > 0:
-        roll_syn += "+"
-    if mod != 0:
-        roll_syn += str(mod)
-
-    try:
-        base_url = "https://cdn.discordapp.com/avatars"
-        user_avatar = f"{base_url}/{author.id}/{author.avatar}.webp"
-        title = author_name(author) + "'s Roll"
-    except AttributeError:
-        user_avatar = ""
-        title = "Your Roll"
-
-    embed = Embed(
-        title=title,
-        thumbnail=EmbedImageStruct(url=user_avatar, height=100, width=100),
-        color=0xE2E0DD,
-    )
-    embed.add_field(name="**Roll**", value=f"**{roll_syn}**", inline=True)
-
-    if implication == "adv":
-        embed.add_field(name="Implication", value="Rolling with Advantage")
-    elif implication == "dis":
-        embed.add_field(name="Implication", value="Rolling with Disadvantage")
-    else:
-        pass
-
-    figlet = pyfiglet.figlet_format(str(final_num), "fraktur")
-
-    # discord uses three backticks for code formatting.
-    # adding a zero width character allows for good looking ascii art
-    # since a "\`" does not work in code formatting.
-    figlet = figlet.replace("`", "\u200B`")
-
-    embed.add_field(
-        name="Generated Numbers", value=f"{random_nums}", inline=False
-    )
-    if len(figlet) < 1024:
-        # this might fail because discord does not allow for
-        # more than 1024 characters in a field value
-        embed.add_field(
-            name="Final Roll", value=f"```{figlet}```", inline=False
-        )
-    else:
-        embed.add_field(name="Result", value=f"**{final_num}**")
-        # logging.exception("Failed to add figlet field.")
-
-    embed.set_footer(final_num)
-
-    return embed
-
-
-def decipher_all(syntax: list[str]):
-    rollable = []
-    for dice_syn in syntax:
-        try:
-            rolls, sides, mod = decipher_dice(dice_syn)
-            rollable.append((rolls, sides, mod))
-        except ValueError:
-            continue
-
-    return rollable
-
-
 def create_choice(choice: str, value: str = ""):
     if not value:
         value = choice
@@ -408,6 +334,18 @@ def unstable_roll_embed(
     result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
     embed.add_field("Result", result_field, inline=False)
     embed.set_footer(f"{result}")
+    return embed
+
+
+def stats_embed(author: User | Member, dice: list, syn: str):
+    embed = interactions.Embed(title=syn, color=0xE2E0DD)
+    embed.set_author(name=author_name(author), icon_url=author_url(author))
+    for res, expl in dice:
+        embed.add_field(
+            expl.replace(",", ", "), "**" + str(res) + "**", inline=True
+        )
+
+    embed.set_footer(f"Total Stats: {sum([s for s, _ in dice])}")
     return embed
 
 
