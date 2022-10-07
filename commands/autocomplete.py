@@ -84,6 +84,23 @@ class AutoComplete(interactions.Extension):
         ]
         await ctx.populate(autocomplete)
 
+    @interactions.extension_autocomplete("dicestats", "dice")
+    async def dicestats_autocomplete(
+        self, ctx: CommandContext, value: str = ""
+    ):
+        rolls = [
+            "4d6X3",
+            "7d4X6-1",
+            "d6+d8+6",
+            "3d6X2+6",
+        ]
+        autocomplete = [
+            interactions.Choice(name=param, value=param)
+            for param in rolls
+            if value.lower() in param.lower() in param.lower()
+        ]
+        await ctx.populate(autocomplete)
+
 
 def setup(client):
     AutoComplete(client)

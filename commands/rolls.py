@@ -533,6 +533,43 @@ class RollCommands(interactions.Extension):
                 button.disabled = True
             return await ctx.edit(components=buttons)
 
+    @interactions.extension_command(
+        name="dicestats",
+        description="Roll dice for stats.",
+        options=[
+            interactions.Option(
+                name="dice",
+                description="Dice rolls to use.",
+                type=interactions.OptionType.STRING,
+                autocomplete=True,
+                required=True,
+            ),
+            interactions.Option(
+                name="ephemeral",
+                description="Whether the result should only be visible to the user.",
+                type=interactions.OptionType.BOOLEAN,
+                required=False,
+            ),
+        ],
+    )
+    async def roll_stats(
+        self, ctx: CommandContext, dice: str, ephemeral: bool = False
+    ):
+        try:
+            stats = [rolldice.roll_dice(dice) for _ in range(6)]
+        except (
+            rolldice.DiceGroupException,
+            rolldice.DiceOperatorException,
+        ) as exc:
+            return await ctx.send(
+                embeds=misc.quick_embed("Error", str(exc), "error"),
+                ephemeral=True,
+            )
+
+        embed = misc.stats_embed(ctx.author, stats, dice)
+
+        await ctx.send(embeds=embed, ephemeral=ephemeral)
+
 
 def setup(client):
     RollCommands(client)
