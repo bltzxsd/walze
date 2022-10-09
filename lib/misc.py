@@ -293,7 +293,7 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
 
 
 async def user_check(ctx):
-    barred = constants.CONFIG.barred_users()
+    barred = constants.CONFIG.barred_users
     if int(ctx.author.id) in barred or int(ctx.user.id) in barred:
         await ctx.send(
             embeds=quick_embed(
