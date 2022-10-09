@@ -143,6 +143,46 @@ class BaseCommands(interactions.Extension):
             ephemeral=ephemeral,
         )
 
+    @interactions.extension_command(
+        name="backup",
+        description="Send all saved parameters to the channel.",
+        scope=constants.CONFIG.scope,
+        options=[
+            interactions.Option(
+                name="ephemeral",
+                description="Whether the reply should be visible only to the user.",
+                type=interactions.OptionType.BOOLEAN,
+                required=False,
+            )
+        ],
+    )
+    async def backup(self, ctx: CommandContext, ephemeral: bool = False):
+        try:
+            owner = constants.CONFIG.owner_id
+            assert owner != 0
+        except AssertionError:
+            return await ctx.send(
+                embeds=misc.quick_embed(
+                    "No owner set.",
+                    "Owner ID was not set in `Config.toml`",
+                    "error",
+                ),
+                ephemeral=True,
+            )
+
+        if int(ctx.author.id) != owner:
+            return await ctx.send(
+                embeds=misc.quick_embed(
+                    "Insufficient privileges.", "Not Owner.", "error"
+                ),
+                ephemeral=True,
+            )
+
+        file = constants.SHEETS.read()
+        file = io.StringIO(file)
+        files = interactions.File(filename="sheets.json", fp=file)
+        await ctx.send(files=files, ephemeral=ephemeral)
+
 
 def setup(client):
     BaseCommands(client)
