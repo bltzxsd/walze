@@ -25,6 +25,15 @@ class Config:
         self.log: str = self.__config.get("log", "").get("file", "")
         self.barred: dict = self.__config.get("barred", "")
 
+    @property
+    def scope(self) -> list[str]:
+        return self.owner.get("servers", [])
+
+    @property
+    def owner_id(self) -> int:
+        return int(self.owner.get("id", 0))
+
+    @property
     def barred_users(self) -> list[int]:
         return self.barred.get("users", [])
 
