@@ -89,15 +89,18 @@ class AutoComplete(interactions.Extension):
         self, ctx: CommandContext, value: str = ""
     ):
         rolls = [
-            "4d6X3",
-            "7d4X6-1",
-            "d6+d8+6",
-            "3d6X2+6",
+            ("d4+d10+2  (Very UP - 0.25)", "d4+d10+2"),
+            ("3d6       (UP      - 0.32)", "3d6"),
+            ("3d6R      (Average - 0.52)", "3d6R"),
+            ("4d6X3     (Average - 0.58)", "4d6X3"),
+            ("2d8+4     (High OP - 0.96)", "2d8+4"),
+            ("3d6X2+6   (High OP - 1.00)", "3d6X2+6"),
         ]
+
         autocomplete = [
-            interactions.Choice(name=param, value=param)
-            for param in rolls
-            if value.lower() in param.lower() in param.lower()
+            interactions.Choice(name=rollname, value=rollval)
+            for rollname, rollval in rolls
+            if value.lower() in rollname.lower()
         ]
         await ctx.populate(autocomplete)
 
