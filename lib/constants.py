@@ -44,8 +44,7 @@ SPELL_LIST = generate_spells()
 class CharacterSheets:
     def __init__(self, filename: str):
         if not Path(filename).is_file():
-            with open(filename, "w+", encoding="utf-8"):
-                pass
+            open(filename, "w+", encoding="utf-8").close()
 
         self.__file = open(filename, "r", encoding="utf-8")
 
