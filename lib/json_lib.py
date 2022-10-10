@@ -1,3 +1,4 @@
+import contextlib
 import json
 import pprint
 import re
@@ -30,10 +31,8 @@ async def modify_param(
 
     async with aiofiles.open("stats.json", "w") as save:
         if isinstance(value, str):
-            try:
+            with contextlib.supress(ValueError):
                 value = int(value)
-            except ValueError:
-                pass
 
         try:
             prev_value = level.get(key)
