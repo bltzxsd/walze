@@ -19,6 +19,7 @@ DICE_SYNTAX = re.compile(r"\d*?\d*d\d+\s?[-+]?\s?\d*")
 SANITIZE_DICE = re.compile(r"[^\d+\-*\/d]")
 INITIAL_DICE_SYNTAX = re.compile(r"(\d*d\d+)")
 
+
 # autocomplete
 def generate_spells() -> list:
     spells_url = "https://dnd5e.wikidot.com/spells"
@@ -43,15 +44,13 @@ SPELL_LIST = generate_spells()
 class CharacterSheets:
     def __init__(self, filename: str):
         if not Path(filename).is_file():
-            open(filename, "w+", encoding="utf-8").close()
+            with open(filename, "w+", encoding="utf-8"):
+                pass
 
         self.__file = open(filename, "r", encoding="utf-8")
 
     def __del__(self):
         self.__file.close()
-
-    async def ready(self):
-        self.__file = self.__file
 
     def read(self) -> str:
         curr = self.__file.read()
