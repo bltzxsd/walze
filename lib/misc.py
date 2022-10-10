@@ -5,7 +5,7 @@ import re
 import aiofiles
 import interactions
 import pyfiglet
-from interactions import CommandContext, Embed, EmbedImageStruct, Member, User
+from interactions import CommandContext, Embed, Member, User
 
 from lib import constants, misc
 
