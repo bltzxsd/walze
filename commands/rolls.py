@@ -250,7 +250,7 @@ class RollCommands(interactions.Extension):
                     "error",
                 )
                 error_embed.set_author(
-                    button_ctx.author.name,
+                    name=misc.author_name(button_ctx.author),
                     icon_url=misc.author_url(button_ctx.author),
                 )
                 await button_ctx.send(embeds=error_embed, ephemeral=True)
@@ -463,7 +463,7 @@ class RollCommands(interactions.Extension):
         try:
             weapons = content.get(str(ctx.author.id)).get("weapons")
             weapon_str = weapon
-            weapon = weapons.get(string.capwords(weapon))
+            weapon = weapons.get(weapon)
         except KeyError:
             return await ctx.send(
                 embeds=misc.quick_embed(
@@ -491,15 +491,18 @@ class RollCommands(interactions.Extension):
         async def auth_check(button_ctx: interactions.ComponentContext):
             if int(button_ctx.author.id) == int(ctx.author.id):
                 return True
-            error_embed = misc.quick_embed(
-                "Error", "Not allowed to interact with this button.", "error"
-            )
-            error_embed.set_author(
-                name=misc.author_name(button_ctx.author),
-                icon_url=misc.author_url(button_ctx.author),
-            )
-            await button_ctx.send(embeds=error_embed, ephemeral=True)
-            return False
+            else:
+                error_embed = misc.quick_embed(
+                    "Error",
+                    "Not allowed to interact with this button.",
+                    "error",
+                )
+                error_embed.set_author(
+                    name=misc.author_name(button_ctx.author),
+                    icon_url=misc.author_url(button_ctx.author),
+                )
+                await button_ctx.send(embeds=error_embed, ephemeral=True)
+                return False
 
         try:
             button_ctx: interactions.ComponentContext = (
