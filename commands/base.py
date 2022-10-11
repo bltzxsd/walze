@@ -104,10 +104,9 @@ class BaseCommands(interactions.Extension):
             retrieved = await misc.open_stats(ctx.author)
             retrieved = retrieved.get(str(ctx.author.id))
         except KeyError as error:
-            logging.error(error)
             return await ctx.send(
                 embeds=misc.quick_embed(
-                    "Error", "You do not have any saved parameters!", "error"
+                    "Error", "You do not have any saved parameters!\n%s" %error, "error"
                 ),
                 ephemeral=True,
             )
