@@ -4,7 +4,7 @@ import rolldice
 from interactions import CommandContext
 from lib import constants, misc
 
-scope = constants.CONFIG.owner.get("servers", [])
+scope = constants.CONFIG.scope
 
 
 class Unstable(interactions.Extension):

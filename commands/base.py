@@ -1,6 +1,5 @@
 import io
 import json
-import logging
 import operator
 import re
 
@@ -9,7 +8,7 @@ import tabulate
 from interactions import CommandContext
 from lib import constants, misc
 
-scope = constants.CONFIG.owner.get("servers", [])
+scope = constants.CONFIG.scope
 
 
 class BaseCommands(interactions.Extension):
