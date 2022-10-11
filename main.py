@@ -3,15 +3,13 @@ import logging
 import interactions
 from interactions.ext import wait_for
 
-from lib import constants
+from lib import constants, misc
 
 synced: bool = False
 discord_token = constants.CONFIG.tokens.get("discord", "")
 constants.CONFIG.set_logs()
 
-bot = interactions.Client(
-    token=discord_token, intents=interactions.Intents.DEFAULT
-)
+bot = interactions.Client(token=discord_token)
 
 bot.load("interactions.ext.files")
 wait_for.setup(bot)
@@ -23,14 +21,20 @@ async def on_ready():
     if not synced:
         pass
 
-    logging.info(f"Logged in as {bot.me.name}")
+    logging.critical(f"Logged in as {bot.me.name}")
 
 
 @bot.event
 async def on_command(ctx: interactions.CommandContext):
-    logging.info(
-        f"Command: {ctx.data.name} by {ctx.author} in guild {ctx.guild_id}:#{ctx.channel}"
-    )
+    try:
+        discrim = ctx.author.user.discriminator
+    except AttributeError:
+        discrim = "????"
+
+    command = f"Command: {ctx.data.name}:{ctx.data.values} "
+    by = f"by {misc.author_name(ctx.author)}#{discrim} "
+    place = f"in guild {ctx.guild_id}:#{ctx.channel}"
+    logging.info(command + by + place)
 
 
 bot.load("commands.base")
