@@ -357,8 +357,10 @@ def normalize_implication(dice_syn: str, implication: str = ""):
     return dice_syn
 
 
-def author_name(author: interactions.Member | interactions.User):
+def author_name(author: Member | User):
     if isinstance(author, Member):
         return author.user.username
-    else:
+    elif isinstance(author, User):
         return author.username
+    else:
+        return ""
