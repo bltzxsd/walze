@@ -28,6 +28,8 @@ dice roller bot with some stuff
     [log]
     # File where walze should store logs.
     file = "bot.log" # deleting this line will print all logs to the terminal instead
+    level = "WARN" # deleting this will default to WARN level
+    # log levels include, "ERROR", "WARNING", "INFO", "DEBUG" each decreasing in verbosity.
 
     [barred]
     # Any users (denoted by their IDs) you may want to bar from using the bot.

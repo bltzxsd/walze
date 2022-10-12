@@ -22,7 +22,8 @@ class Config:
         self.__config: dict = toml.loads(config_file)
         self.owner: dict = self.__config.get("owner", "")
         self.tokens: dict = self.__config.get("tokens", {})
-        self.log: str = self.__config.get("log", "").get("file", "")
+        self.log_file: str = self.__config.get("log", "").get("file", "")
+        self.log_level: str = self.__config.get("log", "").get("level", "WARN")
         self.barred: dict = self.__config.get("barred", "")
 
     @property
@@ -38,10 +39,21 @@ class Config:
         return self.barred.get("users", [])
 
     def set_logs(self):
-        level = logging.INFO
+        match self.log_level:
+            case "DEBUG":
+                level = logging.DEBUG
+            case "INFO":
+                level = logging.INFO
+            case "WARN" | "WARNING":
+                level = logging.WARN
+            case "ERROR" | "CRITICAL" | "FATAL":
+                level = logging.ERROR
+            case _:
+                level = "WARN"
+
         format = "%(asctime)s - %(levelname)s - %(message)s"
         datefmt = "%d/%m/%Y %I:%M:%S %p"
-        filename = "bot.log" if self.log else None
+        filename = "bot.log" if self.log_file else None
 
         logging.basicConfig(
             level=level, format=format, datefmt=datefmt, filename=filename
