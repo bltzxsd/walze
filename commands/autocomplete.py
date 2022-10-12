@@ -28,13 +28,13 @@ class AutoComplete(interactions.Extension):
     async def skill_autocomplete(self, ctx: CommandContext, value: str = ""):
         content = await misc.open_stats(ctx.author)
         try:
-            skills = content.get(str(ctx.author.id)).get("stats")
+            skills = content.get(str(ctx.author.id)).get("stats").keys()
         except KeyError:
             return
 
         autocomplete = [
             interactions.Choice(name=param, value=param)
-            for param in skills.keys()
+            for param in skills
             if value.lower() in param.lower()
         ]
         await ctx.populate(autocomplete)
