@@ -230,7 +230,7 @@ class RollCommands(interactions.Extension):
         link_button = interactions.Button(
             style=interactions.ButtonStyle.LINK,
             label="Wiki",
-            url=f"http://dnd5e.wikidot.com/spell:{spell.lower().replace(' ', '-')}",
+            url=f"https://dnd5e.wikidot.com/spell:{spell.lower().replace(' ', '-')}",
         )
         if buttons:
             cancel_button = interactions.Button(
