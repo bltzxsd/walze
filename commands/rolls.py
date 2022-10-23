@@ -6,7 +6,7 @@ import requests
 import rolldice
 from bs4 import BeautifulSoup, SoupStrainer
 from interactions import CommandContext
-from lib import json_lib, misc
+from lib import json_lib, misc, constants
 
 
 class RollCommands(interactions.Extension):
@@ -218,7 +218,13 @@ class RollCommands(interactions.Extension):
 
         dice = spell_attrs.get("Description")
         dice: str = dice + spell_attrs.get("At Higher Levels")
-        dice_syns = [*dict.fromkeys(misc.find_dice(dice))]
+        found_dice = list(
+            map(
+                lambda x: x.replace(" ", ""),
+                constants.DICE_SYNTAX.findall(dice),
+            )
+        )
+        dice_syns = [*dict.fromkeys(found_dice)]
         buttons = [misc.to_button(dice) for dice in dice_syns]
 
         link_button = interactions.Button(
@@ -263,7 +269,7 @@ class RollCommands(interactions.Extension):
         try:
             button_ctx: interactions.ComponentContext = (
                 await self.client.wait_for_component(
-                    components=rows, check=check, timeout=30
+                    components=rows, check=check, timeout=120
                 )
             )
             performed = button_ctx.data.custom_id
@@ -279,15 +285,10 @@ class RollCommands(interactions.Extension):
                     components=interactions.spread_to_rows(*buttons)
                 )
             else:
-                rolls, sides, mod = misc.decipher_dice(performed)
-                dice_syn = str(rolls) + "d" + str(sides)
-                if mod != 0:
-                    dice_syn += str(mod) if mod < 0 else f"+{mod}"
-
                 disable(buttons)
                 await ctx.edit(components=interactions.spread_to_rows(*buttons))
                 try:
-                    result, explanation = rolldice.roll_dice(dice_syn)
+                    result, explanation = rolldice.roll_dice(performed)
                 except (
                     rolldice.DiceGroupException,
                     rolldice.DiceOperatorException,
@@ -297,7 +298,7 @@ class RollCommands(interactions.Extension):
                         ephemeral=True,
                     )
                 roll_embed = misc.unstable_roll_embed(
-                    ctx.author, dice_syn, result, explanation, ""
+                    ctx.author, performed, result, explanation, ""
                 )
 
                 return await button_ctx.send(embeds=roll_embed)

@@ -8,7 +8,7 @@ import interactions
 import pyfiglet
 from interactions import CommandContext, Embed, Member, User
 
-from lib import constants, misc
+from lib import constants
 
 stats = [
     "Acrobatics",
@@ -87,39 +87,6 @@ def roll_dice(
     return final_num + mod, random_nums
 
 
-def find_dice(string: str):
-    return list(
-        map(lambda x: x.replace(" ", ""), constants.DICE_SYNTAX.findall(string))
-    )
-
-
-def decipher_dice(roll: str) -> tuple[int, int, int]:
-    if not constants.DICE_SYNTAX.match(roll):
-        raise ValueError(f"Invalid Syntax for roll: {roll}")
-
-    rolls = 0
-    sides = 0
-    mod = 0
-    splits = list(roll.split("d"))
-
-    if not splits[0]:
-        rolls = 1
-
-    values = [int(value) for value in re.findall(r"-?\d+", roll)]
-
-    if len(values) == 1:
-        rolls, sides, mod = 1, values[0], 0
-    elif len(values) == 2:
-        if rolls:
-            sides, mod = values[0], values[1]
-        else:
-            rolls, sides = values[0], values[1]
-    else:
-        rolls, sides, mod = values[0], values[1], values[2]
-
-    return rolls, sides, mod
-
-
 async def open_stats(author: Member):
     char = CharRepr(author)
     try:
@@ -143,11 +110,6 @@ def create_choice(choice: str, value: str = ""):
     return interactions.Choice(name=choice, value=value)
 
 
-class Choices:
-    def from_list(self, lst: list[str]):
-        return [create_choice(choice) for choice in lst]
-
-
 def author_url(author: Member | User):
     base_url = "https://cdn.discordapp.com/avatars"
     try:
@@ -156,17 +118,6 @@ def author_url(author: Member | User):
         icon = ""
 
     return icon
-
-
-def disable(buttons: list[interactions.Button]):
-    for button in buttons:
-        button.disabled = True
-
-
-def sort_dice(dice: str):
-    dice = dice.replace("d", "")
-    res, _ = rolldice.roll_dice(dice)
-    return res
 
 
 def to_button(
