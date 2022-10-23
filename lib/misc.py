@@ -228,24 +228,24 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
     author = ctx.author
     title = spell
     school: str = level_school.split(" ")[1].replace(".", "")
-
+    
     match school:
         case "abjuration":
-            spell_icon = "https://imgur.com/H8cB8mv.png"
+            spell_icon = "https://i.imgur.com/H8cB8mv.png"
         case "conjuration":
-            spell_icon = "https://imgur.com/jjtwfqF.png"
+            spell_icon = "https://i.imgur.com/jjtwfqF.png"
         case "divination":
-            spell_icon = "https://imgur.com/6kQkFHa.png"
+            spell_icon = "https://i.imgur.com/6kQkFHa.png"
         case "enchantment":
-            spell_icon = "https://imgur.com/rfeTLTh.png"
+            spell_icon = "https://i.imgur.com/rfeTLTh.png"
         case "evocation":
-            spell_icon = "https://imgur.com/pTpQUGV.png"
+            spell_icon = "https://i.imgur.com/pTpQUGV.png"
         case "illusion":
-            spell_icon = "https://imgur.com/uEWl5eS.png"
+            spell_icon = "https://i.imgur.com/uEWl5eS.png"
         case "necromancy":
-            spell_icon = "https://imgur.com/Aw5eUkK.png"
+            spell_icon = "https://i.imgur.com/Aw5eUkK.png"
         case "transmutation":
-            spell_icon = "https://imgur.com/r7ucT57.png"
+            spell_icon = "https://i.imgur.com/r7ucT57.png"
         case _:
             spell_icon = ""
 
@@ -312,12 +312,14 @@ def unstable_roll_embed(
     explanation: str,
     implication: str = "",
 ):
-    author_icon = author_url(author)
-    title = dice_expr.replace("k", "").replace("K", "")
+    if "K" in dice_expr:
+        implication = "K"
+    if "k" in dice_expr:
+        implication = "k"
+    title = dice_expr.replace("k", "", 1).replace("K", "", 1).replace("*", "\*")
     embed = interactions.Embed(title=title, color=0xE2E0DD)
-    name = misc.author_name(author)
-    embed.set_author(name=name, icon_url=author_icon)
-    explanation = explanation.replace(",", ", ")
+    embed.set_author(name=author_name(author), icon_url=author_url(author))
+    explanation = explanation.replace(",", ", ").replace("a", "+")
 
     match implication:
         case "k":
