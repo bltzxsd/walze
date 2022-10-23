@@ -5,12 +5,6 @@ import toml
 
 
 class Config:
-    # {
-    #     'owner': {'id': 1},
-    #     'tokens': {   'discord': ''},
-    #     'log': {'file': 'bot.log'},
-    #     'barred': {'users': [1] }
-    # }
     def __init__(self):
         filename = "Config.toml"
         if not Path(filename).is_file():
@@ -27,7 +21,7 @@ class Config:
         self.barred: dict = self.__config.get("barred", "")
 
     @property
-    def scope(self) -> list[str]:
+    def scope(self) -> list:
         return self.owner.get("servers", [])
 
     @property
@@ -35,7 +29,7 @@ class Config:
         return int(self.owner.get("id", 0))
 
     @property
-    def barred_users(self) -> list[int]:
+    def barred_users(self) -> list:
         return self.barred.get("users", [])
 
     def set_logs(self):
