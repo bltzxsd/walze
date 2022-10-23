@@ -477,7 +477,7 @@ class RollCommands(interactions.Extension):
         typ = weapon.get("type")
         initial_embed = misc.quick_embed(weapon_str, "", "ok")
         initial_embed.set_author(
-            misc.author_name(ctx.author), misc.author_url(ctx.author)
+            misc.author_name(ctx.author), icon_url=misc.author_url(ctx.author)
         )
         initial_embed.add_field("Damage Type", f"*{typ}*")
         initial_embed.add_field("Hit", hit)
