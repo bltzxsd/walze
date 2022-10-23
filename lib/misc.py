@@ -227,8 +227,9 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
 
     author = ctx.author
     title = spell
-    school: str = level_school.split(" ")[1].replace(".", "")
-    
+    idx = 0 if "cantrip" in level_school else 1
+    school: str = level_school.split(" ")[idx].replace(".", "")
+
     match school:
         case "abjuration":
             spell_icon = "https://i.imgur.com/H8cB8mv.png"
