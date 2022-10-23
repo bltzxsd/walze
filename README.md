@@ -37,7 +37,7 @@ dice roller bot with some stuff
 
     ```
 
-1. Install python dependencies with `pip` (assuming you have python >= v3.10
+1. Install python dependencies with `pip` (assuming you have python >= v3.10)
 
     ```shell
     pip install -r requirements.txt 
