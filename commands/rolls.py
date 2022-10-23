@@ -219,7 +219,7 @@ class RollCommands(interactions.Extension):
         dice = spell_attrs.get("Description")
         dice: str = dice + spell_attrs.get("At Higher Levels")
         dice_syns = [*set(misc.find_dice(dice))]  # remove dupes
-
+        dice_syns.sort(key=misc.sort_dice)
         buttons = [misc.to_button(dice) for dice in dice_syns]
 
         link_button = interactions.Button(

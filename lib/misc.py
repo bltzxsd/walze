@@ -2,6 +2,7 @@ import json
 import random
 import re
 
+import rolldice
 import aiofiles
 import interactions
 import pyfiglet
@@ -155,8 +156,8 @@ class Choices:
 
 
 def author_url(author: Member | User):
+    base_url = "https://cdn.discordapp.com/avatars"
     try:
-        base_url = "https://cdn.discordapp.com/avatars"
         icon = f"{base_url}/{author.id}/{author.avatar}.webp"
     except Exception:
         icon = ""
@@ -167,6 +168,12 @@ def author_url(author: Member | User):
 def disable(buttons: list[interactions.Button]):
     for button in buttons:
         button.disabled = True
+
+
+def sort_dice(dice: str):
+    dice = dice.replace("d", "")
+    res, _ = rolldice.roll_dice(dice)
+    return res
 
 
 def to_button(
