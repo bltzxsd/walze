@@ -221,7 +221,7 @@ class RollCommands(interactions.Extension):
         found_dice = list(
             map(
                 lambda x: x.replace(" ", ""),
-                constants.DICE_SYNTAX.findall(dice),
+                constants.SPELL_DICE_SYNTAX.findall(dice),
             )
         )
         dice_syns = [*dict.fromkeys(found_dice)]
