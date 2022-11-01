@@ -149,7 +149,9 @@ class RollCommands(interactions.Extension):
         content = await misc.open_stats(ctx.author)
         try:
             parameter = (
-                content.get(str(ctx.author.id)).get("custom").get(custom)
+                content.get(str(ctx.author.id), {})
+                .get("custom", {})
+                .get(custom)
             )
         except KeyError:
             return await ctx.send(
@@ -400,8 +402,8 @@ class RollCommands(interactions.Extension):
         dice_syn = "1d20"
         if implication:
             dice_syn = "2" + dice_syn[1:] + implication
-        if skill != 0:
-            dice_syn += str(skill) if skill < 0 else f"+{skill}"
+        if int(skill) != 0:
+            dice_syn += str(skill) if int(skill) < 0 else f"+{skill}"
 
         try:
             result, explanation = rolldice.roll_dice(dice_syn)
@@ -417,7 +419,7 @@ class RollCommands(interactions.Extension):
             string.capwords(display_skill)
             + ": "
             + "1d20"
-            + (str(skill) if skill < 0 else f"+{skill}")
+            + (str(skill) if int(skill) < 0 else f"+{skill}")
         )
         embed = misc.unstable_roll_embed(
             ctx.author,

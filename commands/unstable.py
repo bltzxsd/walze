@@ -53,7 +53,7 @@ class Unstable(interactions.Extension):
                 ephemeral=True,
             )
 
-        figlet = pyfiglet.figlet_format(str(result), "fraktur")
+        figlet = pyfiglet.figlet_format(str(result), "fraktur", width=60)
         figlet = figlet.replace("`", "\u200B`")
         desc = f"```{figlet}```" if len(figlet) < 1024 else f"**{result}**"
         title, status = f"Evaluation: {expr}", "ok"
@@ -121,9 +121,11 @@ class Unstable(interactions.Extension):
                 chance_decimal = (1 - ((target - bonus - 1) ** 3) / 8000) * 100
                 embed_image = "https://imgur.com/O6DbU4w.png"
                 implication = "*Elven Accuracy*"
+            case _:
+                chance_decimal = 0
+                embed_image = ""
 
-        if chance_decimal < 0:
-            chance_decimal = 0.0
+        chance_decimal = max(chance_decimal, 0.0)
 
         if chance_decimal > 66:
             likelihood = "Likely to hit or exceed."
@@ -133,17 +135,16 @@ class Unstable(interactions.Extension):
             likelihood = "Unlikely to hit or exceed."
 
         chance_decimal = str(round(chance_decimal, 2)) + "%"
-        author_url = misc.author_url(ctx.author)
         embed = interactions.Embed(
             title=f"Probability to exceed {target}",
             description="**" + chance_decimal + "**",
             color=0xE2E0DD,
             image=interactions.EmbedImageStruct(url=embed_image),
         )
-        embed.add_field(name="Bonus", value=bonus, inline=True)
+        embed.add_field(name="Bonus", value=str(bonus), inline=True)
         if implication:
             embed.add_field(name="Implication", value=implication, inline=True)
-        embed.set_author(ctx.author.user.username, icon_url=author_url)
+        embed.set_author(name=misc.author_name(ctx.author), icon_url=misc.author_url(ctx.author))
         embed.set_footer(likelihood)
         await ctx.send(embeds=embed, ephemeral=ephemeral)
 

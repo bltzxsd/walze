@@ -2,7 +2,6 @@ import json
 import random
 import re
 
-import rolldice
 import aiofiles
 import interactions
 import pyfiglet
@@ -49,20 +48,20 @@ class CharRepr:
 def quick_embed(title: str, desc: str, ty: str):
     match ty:
         case "info":
-            ty = 0x95E9FE
+            color = 0x95E9FE
         case "warn":
-            ty = 0xFEEC95
+            color = 0xFEEC95
         case "error":
-            ty = 0xFF7373
+            color = 0xFF7373
         case "ok":
-            ty = 0xAEFF73
+            color = 0xAEFF73
         case _:
-            ty = 0xD8D8D8
+            color = 0xD8D8D8
 
     return Embed(
         title=title,
         description=desc,
-        color=ty,
+        color=color,
     )
 
 
@@ -114,7 +113,7 @@ def author_url(author: Member | User):
     base_url = "https://cdn.discordapp.com/avatars"
     try:
         icon = f"{base_url}/{author.id}/{author.avatar}.webp"
-    except Exception:
+    except AttributeError:
         icon = ""
 
     return icon
@@ -131,7 +130,6 @@ def to_button(
 
 
 # ttps://stackoverflow.com/a/65038809
-# hope the person who wrote this is doing amazing rn. actual lifesaver
 def wrap_spell(source_text, separator_chars, width=1024, keep_separators=True):
     current_length = 0
     latest_separator = -1
@@ -178,7 +176,7 @@ def spell_embed(ctx: CommandContext, spell: str, spell_json: dict):
 
     author = ctx.author
     title = spell
-    idx = 0 if "cantrip" in level_school else 1
+    idx = 0 if 'cantrip' in level_school else 1
     school: str = level_school.split(" ")[idx].replace(".", "")
 
     match school:
@@ -282,7 +280,7 @@ def unstable_roll_embed(
             pass
 
     embed.add_field("Products", explanation)
-    figlet = pyfiglet.figlet_format(str(result), "fraktur").replace(
+    figlet = pyfiglet.figlet_format(str(result), "fraktur", width=60).replace(
         "`", "\u200b`"
     )
     result_field = f"```{figlet}```" if len(figlet) <= 1024 else f"**{result}**"
@@ -314,7 +312,6 @@ def normalize_implication(dice_syn: str, implication: str = ""):
 def author_name(author: Member | User):
     if isinstance(author, Member):
         return author.user.username
-    elif isinstance(author, User):
+    if isinstance(author, User):
         return author.username
-    else:
-        return ""
+    return ""

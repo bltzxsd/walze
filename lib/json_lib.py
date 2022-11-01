@@ -15,7 +15,7 @@ async def modify_param(
 
     content = await misc.open_stats(ctx.author)
 
-    author: dict = content.get(str(ctx.author.id))
+    author: dict = content.get(str(ctx.author.id), {})
 
     match access:
         case "char":
@@ -31,7 +31,7 @@ async def modify_param(
 
     async with aiofiles.open("stats.json", "w") as save:
         if isinstance(value, str):
-            with contextlib.supress(ValueError):
+            with contextlib.suppress(ValueError):
                 value = int(value)
 
         try:
@@ -57,12 +57,12 @@ def create_skills(skills: str):
     try:
         assert len(skill_values) == 18
     except AssertionError as exc:
+        error = f"Invalid number of values provided ({len(skill_values)})\n"
         raise AssertionError(
-            f"Invalid number of values provided ({len(skill_values)})\n{pprint.pformat(skill_values, indent=4)}"
+            error + pprint.pformat(skill_values, indent=4)
         ) from exc
-    skills: dict = {
-        name: value for name, value in zip(misc.stats, skill_values)
-    }
+    skills: dict = dict(zip(misc.stats, skill_values))
+
     return skills
 
 
