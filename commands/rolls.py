@@ -199,12 +199,13 @@ class RollCommands(interactions.Extension):
         spell_url = spell.lower().replace(" ", "-").replace("'", "")
         spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
         page = requests.get(spell_url)
-        if page.status_code != 200:
+        status_code: int = page.status_code
+        if status_code != 200:
             return await ctx.send(
                 embeds=misc.quick_embed(
                     f"Failed to fetch spell: {spell_url}",
-                    "Please check if spell exists and try again. Status Code:"
-                    + str(page.status_code),
+                    "Please check if spell exists and try again. Status Code: "
+                    + str(status_code),
                     "error",
                 ),
                 ephemeral=True,
