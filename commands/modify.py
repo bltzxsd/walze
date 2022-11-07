@@ -30,7 +30,7 @@ class ModifyAttributes(interactions.Extension):
             ),
             interactions.Option(
                 name="hit",
-                description="Value of the weapon (hit) to modify, Eg: `1d20+2`, `1d20-4`.",
+                description="Value of the weapon (hit) to modify, Eg: `1d20+2`, `1d20-4` or `None`.",
                 type=interactions.OptionType.STRING,
                 required=True,
             ),
@@ -77,7 +77,8 @@ class ModifyAttributes(interactions.Extension):
             return
 
         try:
-            _, _ = rolldice.roll_dice(hit)
+            if hit.lower() != "none":
+                _, _ = rolldice.roll_dice(hit)
             _, _ = rolldice.roll_dice(dmg)
         except (
             rolldice.DiceGroupException,
