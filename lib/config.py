@@ -48,7 +48,9 @@ class Config:
         format = "%(asctime)s - %(levelname)s - %(message)s"
         datefmt = "%d/%m/%Y %I:%M:%S %p"
         filename = "bot.log" if self.log_file else None
+        args = {'level':level, 'format':format, 'datefmt':datefmt}
 
-        logging.basicConfig(
-            level=level, format=format, datefmt=datefmt, filename=filename
-        )
+        if filename is None:
+            logging.basicConfig(**args, filename=filename)
+        else:
+            logging.basicConfig(**args)

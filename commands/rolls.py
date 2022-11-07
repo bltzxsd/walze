@@ -198,7 +198,7 @@ class RollCommands(interactions.Extension):
 
         spell_url = spell.lower().replace(" ", "-").replace("'", "")
         spell_url = "http://dnd5e.wikidot.com/spell:" + spell_url
-        page = requests.get(spell_url)
+        page = requests.get(spell_url, timeout=60)
         status_code: int = page.status_code
         if status_code != 200:
             return await ctx.send(
@@ -251,18 +251,17 @@ class RollCommands(interactions.Extension):
         async def check(button_ctx: interactions.ComponentContext):
             if int(button_ctx.author.id) == int(ctx.author.id):
                 return True
-            else:
-                error_embed = misc.quick_embed(
-                    "Error",
-                    "Not allowed to interact with this button.",
-                    "error",
-                )
-                error_embed.set_author(
-                    name=misc.author_name(button_ctx.author),
-                    icon_url=misc.author_url(button_ctx.author),
-                )
-                await button_ctx.send(embeds=error_embed, ephemeral=True)
-                return False
+            error_embed = misc.quick_embed(
+                "Error",
+                "Not allowed to interact with this button.",
+                "error",
+            )
+            error_embed.set_author(
+                name=misc.author_name(button_ctx.author),
+                icon_url=misc.author_url(button_ctx.author),
+            )
+            await button_ctx.send(embeds=error_embed, ephemeral=True)
+            return False
 
         def disable(buttons: list[interactions.Button]):
             for button in buttons:
@@ -287,24 +286,24 @@ class RollCommands(interactions.Extension):
                 return await ctx.edit(
                     components=interactions.spread_to_rows(*buttons)
                 )
-            else:
-                disable(buttons)
-                await ctx.edit(components=interactions.spread_to_rows(*buttons))
-                try:
-                    result, explanation = rolldice.roll_dice(performed)
-                except (
-                    rolldice.DiceGroupException,
-                    rolldice.DiceOperatorException,
-                ) as exc:
-                    return await ctx.send(
-                        embeds=misc.quick_embed("Error", str(exc), "error"),
-                        ephemeral=True,
-                    )
-                roll_embed = misc.unstable_roll_embed(
-                    ctx.author, performed, result, explanation, ""
-                )
 
-                return await button_ctx.send(embeds=roll_embed)
+            disable(buttons)
+            await ctx.edit(components=interactions.spread_to_rows(*buttons))
+            try:
+                result, explanation = rolldice.roll_dice(performed)
+            except (
+                rolldice.DiceGroupException,
+                rolldice.DiceOperatorException,
+            ) as exc:
+                return await ctx.send(
+                    embeds=misc.quick_embed("Error", str(exc), "error"),
+                    ephemeral=True,
+                )
+            roll_embed = misc.unstable_roll_embed(
+                ctx.author, performed, result, explanation, ""
+            )
+
+            return await button_ctx.send(embeds=roll_embed)
         except asyncio.TimeoutError:
             disable(buttons)
             return await ctx.edit(
@@ -482,10 +481,14 @@ class RollCommands(interactions.Extension):
         initial_embed.set_author(
             misc.author_name(ctx.author), icon_url=misc.author_url(ctx.author)
         )
+        attacks = []
         initial_embed.add_field("Damage Type", f"*{typ}*")
-        initial_embed.add_field("Hit", hit)
+        if hit.lower() != "none":
+            initial_embed.add_field("Hit", hit)
+            attacks.append(("Attack", hit))
+
         initial_embed.add_field("Damage", dmg)
-        attacks = [("Attack", hit), ("Damage", dmg)]
+        attacks.append(("Damage", dmg))
 
         buttons = [misc.to_button(name, dice) for name, dice in attacks]
 
@@ -494,18 +497,18 @@ class RollCommands(interactions.Extension):
         async def auth_check(button_ctx: interactions.ComponentContext):
             if int(button_ctx.author.id) == int(ctx.author.id):
                 return True
-            else:
-                error_embed = misc.quick_embed(
-                    "Error",
-                    "Not allowed to interact with this button.",
-                    "error",
-                )
-                error_embed.set_author(
-                    name=misc.author_name(button_ctx.author),
-                    icon_url=misc.author_url(button_ctx.author),
-                )
-                await button_ctx.send(embeds=error_embed, ephemeral=True)
-                return False
+
+            error_embed = misc.quick_embed(
+                "Error",
+                "Not allowed to interact with this button.",
+                "error",
+            )
+            error_embed.set_author(
+                name=misc.author_name(button_ctx.author),
+                icon_url=misc.author_url(button_ctx.author),
+            )
+            await button_ctx.send(embeds=error_embed, ephemeral=True)
+            return False
 
         try:
             button_ctx: interactions.ComponentContext = (
