@@ -20,8 +20,8 @@ async def on_ready():
     # just in case i need to do something on start
     if not synced:
         pass
-
-    logging.critical(f"Logged in as {bot.me.name}")
+    name = f"Logged in as {bot.me.name}"
+    logging.critical(name)
 
 
 @bot.event
@@ -31,7 +31,7 @@ async def on_command(ctx: interactions.CommandContext):
     except AttributeError:
         discrim = "????"
 
-    command = f"Command: {ctx.data.name}:{ctx.data.values} "
+    command = f"Command: {ctx.data.name}"
     by = f"by {misc.author_name(ctx.author)}#{discrim} "
     place = f"in guild {ctx.guild_id}:#{ctx.channel}"
     logging.info(command + by + place)
